@@ -783,6 +783,14 @@ label {
   font-family: var(--font-display);
   font-size: 11px;
 }
+.kanban-col-heat-hint {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  padding: 6px 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 .kanban-col-body {
   padding: 10px;
   flex: 1;

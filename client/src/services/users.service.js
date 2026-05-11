@@ -7,10 +7,10 @@ function normalizeUser(user) {
   });
 }
 
-export async function upsertUser({ email, name, role }) {
+export async function upsertUser({ email, name, role, skills }) {
   const response = await apiRequest("/api/users/upsert", {
     method: "POST",
-    body: JSON.stringify({ email, name, role }),
+    body: JSON.stringify({ email, name, role, skills }),
   });
   return {
     action: response.action,
@@ -35,6 +35,14 @@ export async function updateUserRole(userId, role) {
   const updated = await apiRequest(`/api/users/${userId}/role`, {
     method: "PUT",
     body: JSON.stringify({ role }),
+  });
+  return normalizeUser(updated);
+}
+
+export async function updateUserSkills(userId, skills) {
+  const updated = await apiRequest(`/api/users/${userId}/skills`, {
+    method: "PUT",
+    body: JSON.stringify({ skills }),
   });
   return normalizeUser(updated);
 }

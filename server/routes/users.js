@@ -3,8 +3,20 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
+function normalizeSkills(skills) {
+  if (!skills) return [];
+  if (Array.isArray(skills)) {
+    return skills.map((s) => String(s || '').trim()).filter(Boolean);
+  }
+  return String(skills)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 router.post('/upsert', async (req, res) => {
   try {
+    const skills = normalizeSkills(req.body.skills);
     const email = String(req.body.email || '').toLowerCase().trim();
     const name = String(req.body.name || '').trim();
     const role = String(req.body.role || '').trim().toUpperCase();
@@ -20,6 +32,7 @@ router.post('/upsert', async (req, res) => {
       existing.name = name;
       existing.role = role;
       existing.active = true;
+      existing.skills = skills;
       await existing.save();
       return res.json({ user: existing, action: 'updated' });
     }
@@ -29,6 +42,7 @@ router.post('/upsert', async (req, res) => {
       name,
       role,
       active: true,
+      skills,
     });
     return res.status(201).json({ user, action: 'created' });
   } catch (error) {
@@ -42,6 +56,7 @@ router.post('/engineers/enable', async (req, res) => {
   try {
     const email = String(req.body.email || '').toLowerCase().trim();
     const nameInput = String(req.body.name || '').trim();
+    const skills = normalizeSkills(req.body.skills);
     if (!email) {
       return res.status(400).json({ error: 'email is required' });
     }
@@ -51,6 +66,7 @@ router.post('/engineers/enable', async (req, res) => {
       existing.role = 'ENGINEER';
       existing.active = true;
       if (nameInput) existing.name = nameInput;
+      if (skills.length > 0) existing.skills = skills;
       await existing.save();
       return res.json({ user: existing, action: 'enabled' });
     }
@@ -61,6 +77,7 @@ router.post('/engineers/enable', async (req, res) => {
       name: inferredName,
       role: 'ENGINEER',
       active: true,
+      skills,
     });
     return res.status(201).json({ user: created, action: 'created' });
   } catch (error) {
@@ -73,6 +90,7 @@ router.post('/engineers/enable', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { email, name, role } = req.body;
+    const skills = normalizeSkills(req.body.skills);
     if (!email || !name || !role) {
       return res.status(400).json({ error: 'email, name, and role are required' });
     }
@@ -85,6 +103,7 @@ router.post('/', async (req, res) => {
       name: String(name).trim(),
       role,
       active: true,
+      skills,
     });
     await user.save();
     res.status(201).json(user);
@@ -150,6 +169,22 @@ router.put('/:id/role', async (req, res) => {
     res.json(user);
   } catch (error) {
     console.error('User update error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.put('/:id/skills', async (req, res) => {
+  try {
+    const skills = normalizeSkills(req.body.skills);
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { skills },
+      { new: true },
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (error) {
+    console.error('User skill update error:', error);
     res.status(400).json({ error: error.message });
   }
 });

@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    skills: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true }
 );

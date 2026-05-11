@@ -9,6 +9,7 @@ export default function EffortTable({ rows, canOverride, onOverride }) {
     { key: 'baseHours', label: 'Base', render: (r) => `${r.baseHours}h` },
     { key: 'factor', label: 'Factor', render: (r) => `×${getFactor(r.complexity)}` },
     { key: 'estimatedHours', label: 'Est.', render: (r) => `${r.estimatedHours}h` },
+    { key: 'predictedHours', label: 'Smart Est.', render: (r) => `${r.predictedHours ?? r.estimatedHours}h` },
     { key: 'actualHours', label: 'Actual', render: (r) => `${r.actualHours}h` },
     { key: 'variance', label: 'Variance', render: (r) => {
         const v = r.actualHours - r.estimatedHours;
@@ -18,6 +19,9 @@ export default function EffortTable({ rows, canOverride, onOverride }) {
     ...(canOverride ? [{ key: 'override', label: 'Override', sortable: false, render: (r) => (
       <button className="btn btn-ghost" onClick={() => onOverride(r)}><Edit2 size={14} /></button>
     )}] : []),
+    { key: 'predictionHint', label: 'Prediction Insight', sortable: false, render: (r) => (
+      <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{r.predictionHint || '—'}</span>
+    )},
   ];
   return <DataTable columns={columns} data={rows} />;
 }

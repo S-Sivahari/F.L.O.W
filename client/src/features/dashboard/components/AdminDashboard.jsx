@@ -10,6 +10,7 @@ import {
   getUsers,
   setUserActive,
   updateUserRole,
+  updateUserSkills,
   upsertUser,
 } from "../../../services/users.service.js";
 import {
@@ -29,7 +30,8 @@ export default function AdminDashboard() {
   const [assignments, setAssignments] = useState([]);
   const [attempts, setAttempts] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
-  const [form, setForm] = useState({ name: "", email: "", role: ROLES.ENGINEER });
+  const [form, setForm] = useState({ name: "", email: "", role: ROLES.ENGINEER, skills: "" });
+  const [skillsDraft, setSkillsDraft] = useState({});
   const [selectedBlockId, setSelectedBlockId] = useState("");
   const [selectedStage, setSelectedStage] = useState(STAGES[0]);
   const [reassignFrom, setReassignFrom] = useState("");
@@ -140,7 +142,7 @@ export default function AdminDashboard() {
     try {
       await upsertUser(form);
       toast.success("User registered and enabled");
-      setForm({ name: "", email: "", role: ROLES.ENGINEER });
+      setForm({ name: "", email: "", role: ROLES.ENGINEER, skills: "" });
       await refreshAll();
     } catch (error) {
       toast.error(error.message);
@@ -161,6 +163,17 @@ export default function AdminDashboard() {
     try {
       await updateUserRole(target.id, role);
       toast.success(`Role changed to ${role}`);
+      await refreshAll();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  }
+
+  async function handleSaveSkills(target) {
+    try {
+      const draft = skillsDraft[target.id] ?? target.skills?.join(", ") ?? "";
+      await updateUserSkills(target.id, draft);
+      toast.success("Skills updated");
       await refreshAll();
     } catch (error) {
       toast.error(error.message);
@@ -257,6 +270,14 @@ export default function AdminDashboard() {
                 <option value={ROLES.ENGINEER}>Engineer</option>
               </select>
             </div>
+            <div className="form-row">
+              <label>Skills (comma separated)</label>
+              <input
+                value={form.skills}
+                onChange={(e) => setForm((f) => ({ ...f, skills: e.target.value }))}
+                placeholder="DRC, LVS, Current Mirror"
+              />
+            </div>
             <div style={{ alignSelf: "end" }}>
               <button className="btn btn-primary" type="submit">Save User</button>
             </div>
@@ -264,7 +285,7 @@ export default function AdminDashboard() {
 
           <table className="data-table">
             <thead>
-              <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+              <tr><th>Name</th><th>Email</th><th>Role</th><th>Skills</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {users.map((u) => (
@@ -277,6 +298,20 @@ export default function AdminDashboard() {
                       <option value={ROLES.ENGINEER}>Engineer</option>
                       <option value={ROLES.ADMIN}>Admin</option>
                     </select>
+                  </td>
+                  <td style={{ minWidth: 260 }}>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <input
+                        value={skillsDraft[u.id] ?? (u.skills || []).join(", ")}
+                        onChange={(e) =>
+                          setSkillsDraft((prev) => ({ ...prev, [u.id]: e.target.value }))
+                        }
+                        placeholder="Add skill tags"
+                      />
+                      <button className="btn btn-secondary" onClick={() => handleSaveSkills(u)}>
+                        Save
+                      </button>
+                    </div>
                   </td>
                   <td>{u.active ? "Active" : "Inactive"}</td>
                   <td>
