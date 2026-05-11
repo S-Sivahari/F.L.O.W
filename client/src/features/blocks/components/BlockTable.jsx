@@ -12,7 +12,11 @@ export default function BlockTable({ blocks, loading, role, onEdit, onDelete, on
     { key: 'complexity', label: 'Complexity', render: (r) => <span className={`complexity-badge complexity-${r.complexity}`}>{r.complexity}</span> },
     { key: 'estimatedArea', label: 'Est. Area', render: (r) => `${r.estimatedArea} ${r.areaUnit}` },
     { key: 'assignedEngineerId', label: 'Engineer', render: (r) => {
-        return r.assignedEngineerId ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span className="avatar avatar-sm">ENG</span>Engineer</span> : <span style={{ color: 'var(--text-muted)' }}>Unassigned</span>;
+        if (!r.assignedEngineer) {
+          return <span style={{ color: 'var(--text-muted)' }}>Unassigned</span>;
+        }
+        const initials = r.assignedEngineer.avatarInitials || '?';
+        return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span className="avatar avatar-sm">{initials}</span>{r.assignedEngineer.name}</span>;
     }},
     { key: 'status', label: 'Status', render: (r) => <StatusBadge stage={r.status} /> },
     { key: 'actions', label: 'Actions', sortable: false, render: (r) => (

@@ -27,7 +27,7 @@ export default function Sidebar({ open }) {
           <circle cx="16" cy="16" r="3" fill="currentColor"/>
           <path d="M2 12h4M2 20h4M26 12h4M26 20h4M12 2v4M20 2v4M12 26v4M20 26v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
         </svg>
-        <span>LayoutOS</span>
+        <span>F.L.O.W</span>
       </div>
       <nav className="sidebar-nav">
         {links.map(({ to, label, icon: Icon }) => (

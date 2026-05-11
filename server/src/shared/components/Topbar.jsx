@@ -17,7 +17,7 @@ export default function Topbar({ onMenuClick }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, role, logout } = useAuth();
-  const title = TITLES[pathname] || 'LayoutOS';
+  const title = TITLES[pathname] || 'F.L.O.W';
   const pendingCount = mockApprovals.filter((a) => a.status === 'Pending').length;
   const showBell = role === ROLES.MANAGER || role === ROLES.ADMIN;
 

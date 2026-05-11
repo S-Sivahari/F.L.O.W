@@ -36,18 +36,11 @@ router.post('/', async (req, res) => {
 
     const effort = new Effort(req.body);
     await effort.save();
+
+    // Set block's actual hours directly to the value entered
+    await Block.findByIdAndUpdate(blockId, { actualHours: hoursLogged });
+    
     await effort.populate('blockId');
-
-    // Update block's actual hours
-    const totalEffort = await Effort.aggregate([
-      { $match: { blockId: effort.blockId } },
-      { $group: { _id: null, total: { $sum: '$hoursLogged' } } },
-    ]);
-
-    if (totalEffort.length > 0) {
-      await Block.findByIdAndUpdate(effort.blockId, { actualHours: totalEffort[0].total });
-    }
-
     res.status(201).json(effort);
   } catch (error) {
     console.error('Effort logging error:', error);
@@ -64,15 +57,10 @@ router.put('/:id', async (req, res) => {
 
     if (!effort) return res.status(404).json({ error: 'Effort not found' });
 
-    // Update block's actual hours
-    const totalEffort = await Effort.aggregate([
-      { $match: { blockId: effort.blockId } },
-      { $group: { _id: null, total: { $sum: '$hoursLogged' } } },
-    ]);
-
-    if (totalEffort.length > 0) {
-      await Block.findByIdAndUpdate(effort.blockId, { actualHours: totalEffort[0].total });
-    }
+    const blockIdRef = effort.blockId._id;
+    
+    // Set block's actual hours directly to the updated value
+    await Block.findByIdAndUpdate(blockIdRef, { actualHours: effort.hoursLogged });
 
     res.json(effort);
   } catch (error) {
@@ -87,17 +75,8 @@ router.delete('/:id', async (req, res) => {
     const effort = await Effort.findByIdAndDelete(req.params.id);
     if (!effort) return res.status(404).json({ error: 'Effort not found' });
 
-    // Update block's actual hours
-    const totalEffort = await Effort.aggregate([
-      { $match: { blockId: effort.blockId } },
-      { $group: { _id: null, total: { $sum: '$hoursLogged' } } },
-    ]);
-
-    if (totalEffort.length > 0) {
-      await Block.findByIdAndUpdate(effort.blockId, { actualHours: totalEffort[0].total });
-    } else {
-      await Block.findByIdAndUpdate(effort.blockId, { actualHours: 0 });
-    }
+    // Set block's actual hours to 0 when effort is deleted
+    await Block.findByIdAndUpdate(effort.blockId, { actualHours: 0 });
 
     res.json({ message: 'Effort deleted successfully' });
   } catch (error) {

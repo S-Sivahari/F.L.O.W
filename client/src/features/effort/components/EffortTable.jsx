@@ -1,8 +1,8 @@
-import { Edit2 } from 'lucide-react';
+import { Edit2, Clock } from 'lucide-react';
 import DataTable from '../../../shared/components/DataTable.jsx';
 import { getFactor } from '../../../shared/utils/complexity.js';
 
-export default function EffortTable({ rows, canOverride, onOverride }) {
+export default function EffortTable({ rows, canOverride, onOverride, canLogHours, onLogHours }) {
   const columns = [
     { key: 'name', label: 'Block', render: (r) => <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}>{r.name}</span> },
     { key: 'complexity', label: 'Complexity', render: (r) => <span className={`complexity-badge complexity-${r.complexity}`}>{r.complexity}</span> },
@@ -16,6 +16,22 @@ export default function EffortTable({ rows, canOverride, onOverride }) {
         if (r.actualHours === 0) return <span style={{ color: 'var(--text-muted)' }}>—</span>;
         return <span className={v > 0 ? 'variance-neg' : 'variance-pos'}>{v > 0 ? '+' : ''}{v}h</span>;
     }},
+    ...(typeof canLogHours === 'function' && typeof onLogHours === 'function'
+      ? [{
+          key: 'log',
+          label: 'Log',
+          sortable: false,
+          render: (r) => (
+            canLogHours(r) ? (
+              <button className="btn btn-ghost" type="button" title="Log actual hours" onClick={() => onLogHours(r)}>
+                <Clock size={14} />
+              </button>
+            ) : (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>—</span>
+            )
+          ),
+        }]
+      : []),
     ...(canOverride ? [{ key: 'override', label: 'Override', sortable: false, render: (r) => (
       <button className="btn btn-ghost" onClick={() => onOverride(r)}><Edit2 size={14} /></button>
     )}] : []),

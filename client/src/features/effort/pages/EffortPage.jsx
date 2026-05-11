@@ -2,18 +2,21 @@ import { useEffect, useMemo, useState } from "react";
 import PageWrapper from "../../../shared/components/PageWrapper.jsx";
 import EffortTable from "../components/EffortTable.jsx";
 import EffortOverrideModal from "../components/EffortOverrideModal.jsx";
+import EffortLogModal from "../components/EffortLogModal.jsx";
 import TotalEffortSummary from "../components/TotalEffortSummary.jsx";
 import { getEffortEstimates } from "../../../services/effort.service.js";
 import { getBlocks } from "../../../services/blocks.service.js";
 import useAuth from "../../../shared/hooks/useAuth.js";
 import { canAccess } from "../../../shared/utils/roleGuard.js";
 import { subscribeToDataChanges } from "../../../services/api.js";
+import { ROLES } from "../../../shared/constants/roles.js";
 
 export default function EffortPage() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const [rows, setRows] = useState([]);
   const [blocks, setBlocks] = useState([]);
   const [overrideRow, setOverrideRow] = useState(null);
+  const [logRow, setLogRow] = useState(null);
 
   async function refresh() {
     setRows(await getEffortEstimates());
@@ -85,6 +88,13 @@ export default function EffortPage() {
     });
   }, [blocks, rows]);
 
+  function canLogHours(row) {
+    if (!row?.assignedEngineerId) return false;
+    if (role === ROLES.ADMIN || role === ROLES.MANAGER) return true;
+    if (role === ROLES.ENGINEER) return row.assignedEngineerId === user?.id;
+    return false;
+  }
+
   return (
     <PageWrapper>
       <div className="page-header">
@@ -96,8 +106,18 @@ export default function EffortPage() {
           rows={rowsWithPrediction}
           canOverride={canAccess(role, "override:effort")}
           onOverride={(r) => setOverrideRow(r)}
+          canLogHours={canLogHours}
+          onLogHours={(r) => setLogRow(r)}
         />
       </div>
+      <EffortLogModal
+        row={logRow}
+        onClose={() => setLogRow(null)}
+        onSaved={() => {
+          setLogRow(null);
+          refresh();
+        }}
+      />
       <EffortOverrideModal
         row={overrideRow}
         onClose={() => setOverrideRow(null)}

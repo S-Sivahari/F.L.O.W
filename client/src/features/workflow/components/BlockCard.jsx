@@ -17,7 +17,7 @@ export default function BlockCard({ block, onChanged, onShowLog }) {
   const eng = block.assignedEngineer;
   const isAssigned = block.assignedEngineerId === user?.id;
   const isMgr = role === ROLES.MANAGER || role === ROLES.ADMIN;
-  const canAdvance = isAssigned || isMgr;
+  const canAdvance = isAssigned;  // Only the assigned engineer can advance stages
   const inReview = block.status === 'Review';
   const isCompleted = block.status === 'Completed';
   const inProgress = block.status === 'In Progress';

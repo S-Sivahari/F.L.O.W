@@ -208,7 +208,39 @@ router.put('/:id', async (req, res) => {
       }
     }
 
-    const block = await Block.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    // Handle timestamp tracking for automatic hours calculation
+    const updateData = { ...req.body };
+    if (statusChanged) {
+      // Track status history
+      if (!existingBlock.statusHistory) {
+        existingBlock.statusHistory = [];
+      }
+      existingBlock.statusHistory.push({
+        status: nextStatus,
+        timestamp: new Date(),
+      });
+      updateData.statusHistory = existingBlock.statusHistory;
+
+      // Set startedAt when moving to In Progress
+      if (nextStatus === 'In Progress' && !existingBlock.startedAt) {
+        updateData.startedAt = new Date();
+      }
+
+      // Set completedAt and calculate actual hours when moving to Completed
+      if (nextStatus === 'Completed' && !existingBlock.completedAt) {
+        updateData.completedAt = new Date();
+        
+        // Auto-calculate actualHours based on time spent
+        if (updateData.startedAt || existingBlock.startedAt) {
+          const start = updateData.startedAt || existingBlock.startedAt;
+          const end = updateData.completedAt;
+          const hoursSpent = Math.ceil((end - start) / (1000 * 60 * 60)); // Convert ms to hours, rounded up
+          updateData.actualHours = Math.max(hoursSpent, 1); // At least 1 hour
+        }
+      }
+    }
+
+    const block = await Block.findByIdAndUpdate(req.params.id, updateData, { new: true })
       .populate('assignedEngineerId')
       .populate('dependsOn');
 

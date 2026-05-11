@@ -51,6 +51,20 @@ const blockSchema = new mongoose.Schema(
     notes: String,
     overrideReason: String,
     overrideUpdatedAt: Date,
+    startedAt: {
+      type: Date,
+      default: null,
+    },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+    statusHistory: [
+      {
+        status: String,
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true },
 );
