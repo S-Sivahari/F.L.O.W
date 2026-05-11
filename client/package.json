@@ -1,0 +1,25 @@
+{
+  "name": "layoutos",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.10.2",
+    "lucide-react": "^0.462.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.1",
+    "recharts": "^2.15.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react-swc": "^3.11.0",
+    "lovable-tagger": "^1.1.13",
+    "vite": "^5.4.19"
+  }
+}

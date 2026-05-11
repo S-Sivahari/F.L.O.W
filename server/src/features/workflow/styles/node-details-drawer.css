@@ -1,0 +1,246 @@
+/* Node Details Drawer */
+.node-details-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(1px);
+  z-index: 90;
+  animation: fadeIn 150ms ease;
+}
+
+.node-details-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 380px;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -4px 0 16px rgba(19, 32, 51, 0.12);
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 200ms ease;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .node-details-drawer {
+    width: 100%;
+  }
+}
+
+.drawer-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.drawer-header h2 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.close-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.drawer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.section {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+.block-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.block-header .status-badge {
+  flex-shrink: 0;
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+
+.block-header h3 {
+  font-size: 14px;
+  margin: 0;
+  font-family: var(--font-display);
+}
+
+.block-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 8px 0 12px 0;
+  line-height: 1.5;
+}
+
+.block-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meta-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.meta-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.meta-value {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+.section-title {
+  font-size: 12px;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.empty-state {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+.dependency-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dependency-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-base);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  transition: var(--transition);
+}
+
+.dependency-item:hover {
+  background: var(--bg-elevated);
+}
+
+.dep-status {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dep-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dep-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dep-status-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dep-arrow {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.actions-section {
+  padding: 20px;
+}
+
+.action-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--accent-primary);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 13px;
+  transition: var(--transition);
+  border: none;
+  cursor: pointer;
+}
+
+.action-btn:hover {
+  filter: brightness(1.1);
+}
+
+.action-btn:active {
+  filter: brightness(0.95);
+}
+
+/* Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

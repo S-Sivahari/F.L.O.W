@@ -24,12 +24,12 @@ dist-ssr
 *.sw?
 .env
 .env.local
+.DS_Store
 
-# Backend artefacts
-server/node_modules/
-server/dist/
-server/build/
-server/.env
-server/.env.local
-server/.git/
-server/bun.lock
+# Local build artifacts
+node_modules/
+dist/
+build/
+
+# Nested git repo (ignored so only root git is used)
+.git/
