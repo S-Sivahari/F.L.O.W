@@ -47,11 +47,22 @@ export default function BlockFormModal({ isOpen, initial, onClose, onSaved }) {
     };
     delete payload.customType;
     try {
-      if (initial) { await updateBlock(initial.id, payload); toast.success('Block updated'); }
-      else { await createBlock(payload); toast.success('Block created'); }
+      if (initial) { 
+        await updateBlock(initial.id, payload); 
+        toast.success('Block updated'); 
+      } else { 
+        await createBlock(payload); 
+        toast.success('Block created'); 
+      }
       onSaved();
-    } catch { toast.error('Failed to save block'); }
-    setBusy(false);
+    } catch (error) { 
+      console.error('Block save error:', error);
+      toast.error(error.message || 'Failed to save block');
+      // Still refresh data to sync with server
+      setTimeout(() => onSaved(), 500);
+    } finally {
+      setBusy(false);
+    }
   }
 
   const estHours = computeEstimatedHours(form.baseHours, form.complexity);

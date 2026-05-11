@@ -2,11 +2,11 @@ import { ROLES } from '../constants/roles.js';
 
 const PERMISSIONS = {
   'view:dashboard': [ROLES.ADMIN, ROLES.MANAGER, ROLES.ENGINEER],
-  'view:blocks': [ROLES.ADMIN, ROLES.MANAGER],
-  'view:effort': [ROLES.ADMIN, ROLES.MANAGER, ROLES.ENGINEER],
-  'view:assignments': [ROLES.MANAGER, ROLES.ADMIN],
+  'view:blocks': [ROLES.MANAGER],
+  'view:effort': [ROLES.MANAGER, ROLES.ENGINEER],
+  'view:assignments': [ROLES.MANAGER],
   'view:workflow': [ROLES.ADMIN, ROLES.MANAGER, ROLES.ENGINEER],
-  'view:approvals': [ROLES.MANAGER, ROLES.ENGINEER, ROLES.ADMIN],
+  'view:approvals': [ROLES.MANAGER, ROLES.ENGINEER],
   'create:block': [ROLES.ADMIN, ROLES.MANAGER],
   'delete:block': [ROLES.ADMIN],
   'edit:block': [ROLES.ADMIN, ROLES.MANAGER],
