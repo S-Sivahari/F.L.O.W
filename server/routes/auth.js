@@ -1,5 +1,6 @@
 import express from 'express';
 import passport from '../config/passport.js';
+import LoginAttempt from '../models/LoginAttempt.js';
 
 const router = express.Router();
 
@@ -35,6 +36,15 @@ router.post('/logout', (req, res) => {
       res.json({ message: 'Logged out successfully' });
     });
   });
+});
+
+router.get('/login-attempts', async (req, res) => {
+  try {
+    const attempts = await LoginAttempt.find().sort({ createdAt: -1 }).limit(200);
+    res.json(attempts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 export default router;

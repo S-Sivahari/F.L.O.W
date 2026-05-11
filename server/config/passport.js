@@ -1,6 +1,7 @@
 import passport from 'passport';
 import GoogleStrategy from 'passport-google-oauth20';
 import User from '../models/User.js';
+import LoginAttempt from '../models/LoginAttempt.js';
 
 /** Pre-approved Google accounts (always allowed; role enforced on each login). */
 const HARDCODED_ROLE_BY_EMAIL = {
@@ -15,17 +16,38 @@ function findUserByEmailInsensitive(email) {
   });
 }
 
+async function logAttempt({ email, status, reason, req }) {
+  try {
+    await LoginAttempt.create({
+      email: String(email || '').toLowerCase().trim(),
+      status,
+      reason: reason || null,
+      ip: req?.ip || req?.headers?.['x-forwarded-for'] || null,
+      userAgent: req?.headers?.['user-agent'] || null,
+    });
+  } catch (error) {
+    console.error('Login attempt log error:', error.message);
+  }
+}
+
 passport.use(
   new GoogleStrategy.Strategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      passReqToCallback: true,
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (req, accessToken, refreshToken, profile, done) => {
       try {
         const googleEmail = profile.emails?.[0]?.value?.trim();
         if (!googleEmail) {
+          await logAttempt({
+            email: googleEmail,
+            status: 'BLOCKED',
+            reason: 'Missing Google email',
+            req,
+          });
           return done(null, false, { message: 'Email not authorized' });
         }
 
@@ -43,14 +65,32 @@ passport.use(
             role: hardcodedRole,
             active: true,
           });
+          await logAttempt({
+            email: normalizedEmail,
+            status: 'ALLOWED',
+            reason: `Hardcoded ${hardcodedRole}`,
+            req,
+          });
           return done(null, user);
         }
 
         if (!user) {
+          await logAttempt({
+            email: normalizedEmail,
+            status: 'BLOCKED',
+            reason: 'Email not pre-registered',
+            req,
+          });
           return done(null, false, { message: 'Email not authorized' });
         }
 
         if (user.active === false) {
+          await logAttempt({
+            email: normalizedEmail,
+            status: 'BLOCKED',
+            reason: 'User deactivated',
+            req,
+          });
           return done(null, false, { message: 'User account is deactivated' });
         }
 
@@ -60,6 +100,12 @@ passport.use(
           user.role = hardcodedRole;
         }
         await user.save();
+        await logAttempt({
+          email: normalizedEmail,
+          status: 'ALLOWED',
+          reason: `Role ${user.role}`,
+          req,
+        });
 
         return done(null, user);
       } catch (error) {

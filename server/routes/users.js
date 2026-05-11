@@ -3,6 +3,40 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
+router.post('/upsert', async (req, res) => {
+  try {
+    const email = String(req.body.email || '').toLowerCase().trim();
+    const name = String(req.body.name || '').trim();
+    const role = String(req.body.role || '').trim().toUpperCase();
+    if (!email || !name || !role) {
+      return res.status(400).json({ error: 'email, name, and role are required' });
+    }
+    if (!['MANAGER', 'ENGINEER'].includes(role)) {
+      return res.status(400).json({ error: 'role must be MANAGER or ENGINEER' });
+    }
+
+    const existing = await User.findOne({ email });
+    if (existing) {
+      existing.name = name;
+      existing.role = role;
+      existing.active = true;
+      await existing.save();
+      return res.json({ user: existing, action: 'updated' });
+    }
+
+    const user = await User.create({
+      email,
+      name,
+      role,
+      active: true,
+    });
+    return res.status(201).json({ user, action: 'created' });
+  } catch (error) {
+    console.error('Upsert user error:', error);
+    return res.status(400).json({ error: error.message || 'Failed to upsert user' });
+  }
+});
+
 // Admin: add or enable engineer for Google auth access
 router.post('/engineers/enable', async (req, res) => {
   try {
