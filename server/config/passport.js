@@ -5,8 +5,7 @@ import LoginAttempt from '../models/LoginAttempt.js';
 
 /** Pre-approved Google accounts (always allowed; role enforced on each login). */
 const HARDCODED_ROLE_BY_EMAIL = {
-  'kirthana.llm@gmail.com': 'ADMIN',
-  'saroswetasasi@gmail.com': 'MANAGER',
+  [process.env.ADMIN_EMAIL]: process.env.ADMIN_ROLE,
 };
 
 function findUserByEmailInsensitive(email) {
