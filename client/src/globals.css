@@ -742,12 +742,14 @@ label {
 }
 
 /* Kanban */
+/* Kanban */
 .kanban-board {
   display: flex;
   gap: 14px;
   overflow-x: auto;
   padding-bottom: 12px;
 }
+
 .kanban-col {
   flex: 0 0 280px;
   background: var(--bg-surface);
@@ -757,15 +759,16 @@ label {
   flex-direction: column;
   max-height: calc(100vh - 200px);
 }
+
 .kanban-col-header {
   padding: 12px 14px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 3px solid;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
+
 .kanban-col-title {
   display: flex;
   align-items: center;
@@ -775,6 +778,7 @@ label {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
 .kanban-col-count {
   background: var(--bg-elevated);
   color: var(--text-secondary);
@@ -783,6 +787,7 @@ label {
   font-family: var(--font-display);
   font-size: 11px;
 }
+
 .kanban-col-heat-hint {
   font-size: 10px;
   color: var(--text-secondary);
@@ -791,6 +796,7 @@ label {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
 .kanban-col-body {
   padding: 10px;
   flex: 1;

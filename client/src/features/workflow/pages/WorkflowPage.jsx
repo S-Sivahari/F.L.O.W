@@ -66,7 +66,7 @@ export default function WorkflowPage() {
   return (
     <PageWrapper>
       <div className="page-header">
-        <h1>Workflow Board</h1>
+        <h1>Project Workflow </h1>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {STAGES.map((s) => (
             <button key={s} className={`chip ${filter === s ? 'active' : ''}`} onClick={() => setFilter(filter === s ? null : s)}>{s}</button>

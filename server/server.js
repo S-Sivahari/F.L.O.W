@@ -6,15 +6,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
-dotenv.config({ path: path.join(rootDir, '.env') });
+const envPath = path.join(rootDir, '.env');
+const envResult = dotenv.config({ path: envPath });
+if (envResult.error) {
+  console.error('❌ Failed to load .env file:', envResult.error.message);
+  console.error('Expected .env at:', envPath);
+} else {
+  console.log('✅ Loaded environment from', envPath);
+}
 
-// Verify environment variables are loaded
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  console.error('❌ Environment variables not loaded. Check .env file.');
-  console.error('Expected .env at:', path.join(rootDir, '.env'));
-  console.error('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
-  console.error('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
-  process.exit(1);
+// Help developers spot missing env quickly (server can still start)
+if (!process.env.MONGODB_URI) {
+  console.warn('⚠️  MONGODB_URI is not set. DB-backed routes will fail until you add it to .env.');
+  console.warn('Expected .env at:', path.join(rootDir, '.env'));
+}
+if (!process.env.CLIENT_URL) {
+  console.warn('⚠️  CLIENT_URL is not set. CORS/redirects may not work correctly.');
+}
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_CALLBACK_URL) {
+  console.warn('⚠️  Google OAuth env not fully set. /api/auth/google will return 503 until configured.');
 }
 
 // Start server with dynamic imports
@@ -85,18 +95,22 @@ if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     });
   });
 
-  // Connect to MongoDB and start server
-  try {
-    await connectDB();
-    
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-      console.log(`📝 Environment: ${process.env.NODE_ENV}`);
-      console.log(`🔗 Client URL: ${process.env.CLIENT_URL}`);
+  // Start HTTP server first, then connect to MongoDB in background.
+  // This keeps /api/auth/google reachable even if Atlas IP isn't whitelisted yet.
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📝 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🔗 Client URL: ${process.env.CLIENT_URL}`);
+  });
+
+  if (process.env.MONGODB_URI) {
+    connectDB().catch((error) => {
+      console.error('❌ MongoDB connection failed:', error.message);
+      console.error('   The server is still running, but DB-backed routes will fail until this is fixed.');
     });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+  } else {
+    console.warn('⚠️  Skipping MongoDB connection because MONGODB_URI is not set.');
+    console.warn('   Most API routes will fail until you add it to .env and restart the server.');
   }
 })();
 

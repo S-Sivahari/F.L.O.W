@@ -7,7 +7,8 @@ export default function KanbanColumn({ stage, children, count, heatLevel = 0, he
   const tint = `linear-gradient(180deg, rgba(239, 68, 68, ${clampedHeat * 0.18}) 0%, rgba(239, 68, 68, 0) 40%)`;
 
   return (
-    <div className="kanban-col" style={{ boxShadow: clampedHeat > 0 ? glow : undefined, backgroundImage: clampedHeat > 0 ? tint : undefined }}>
+    <div className="kanban-col"style={{backgroundImage: undefined,boxShadow: 'none',}}
+>
       <div className="kanban-col-header" style={{ borderTopColor: color }}>
         <div className="kanban-col-title">
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block' }} />
