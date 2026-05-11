@@ -5,6 +5,7 @@ import { getApprovals, approveBlock, rejectBlock } from '../../../services/appro
 import { getBlocks } from '../../../services/blocks.service.js';
 import { relativeTime } from '../../../shared/utils/formatters.js';
 import EmptyState from '../../../shared/components/EmptyState.jsx';
+import { subscribeToDataChanges } from '../../../services/api.js';
 
 export default function PendingApprovalsList() {
   const { user } = useAuth();
@@ -19,7 +20,13 @@ export default function PendingApprovalsList() {
     setPending(all.filter((a) => a.status === 'Pending'));
     setBlocks(await getBlocks());
   }
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+    const unsubscribe = subscribeToDataChanges(() => {
+      refresh();
+    });
+    return unsubscribe;
+  }, []);
 
   async function onApprove(a) {
     await approveBlock(a.id, user.id);

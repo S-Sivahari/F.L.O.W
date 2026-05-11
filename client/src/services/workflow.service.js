@@ -1,10 +1,13 @@
-import { nextStage } from '../shared/constants/pipeline.js';
+import { nextStage } from "../shared/constants/pipeline.js";
 import { apiRequest, toId, withAvatarInitials } from "./api.js";
 import { getBlocks, updateBlock } from "./blocks.service.js";
 
 function normalizeWorkflowLog(log) {
   const actor = withAvatarInitials(log.performedBy);
-  const stageFromAction = String(log.action || "").replace(/^Force stage:\s*/, "");
+  const stageFromAction = String(log.action || "").replace(
+    /^Force stage:\s*/,
+    "",
+  );
   return {
     ...log,
     id: toId(log),
@@ -20,9 +23,9 @@ function normalizeWorkflowLog(log) {
 export async function advanceStage(blockId, actorId, comment = null) {
   const blocks = await getBlocks();
   const block = blocks.find((b) => b.id === blockId);
-  if (!block) throw new Error('Block not found');
+  if (!block) throw new Error("Block not found");
   const next = nextStage(block.status);
-  if (!next) throw new Error('Already at final stage');
+  if (!next) throw new Error("Already at final stage");
   await updateBlock(blockId, { status: next });
   await apiRequest("/api/workflow-logs", {
     method: "POST",

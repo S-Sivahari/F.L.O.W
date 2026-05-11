@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const blockSchema = new mongoose.Schema(
   {
@@ -14,7 +14,7 @@ const blockSchema = new mongoose.Schema(
     techNode: String,
     complexity: {
       type: String,
-      enum: ['Simple', 'Medium', 'Complex', 'Critical'],
+      enum: ["Simple", "Medium", "Complex", "Critical"],
       required: true,
     },
     baseHours: {
@@ -30,18 +30,18 @@ const blockSchema = new mongoose.Schema(
     areaUnit: String,
     status: {
       type: String,
-      enum: ['Not Started', 'In Progress', 'DRC', 'LVS', 'Review', 'Completed'],
-      default: 'Not Started',
+      enum: ["Not Started", "In Progress", "DRC", "LVS", "Review", "Completed"],
+      default: "Not Started",
     },
     assignedEngineerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       default: null,
     },
     dependsOn: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Block',
+        ref: "Block",
       },
     ],
     criticPath: {
@@ -52,7 +52,7 @@ const blockSchema = new mongoose.Schema(
     overrideReason: String,
     overrideUpdatedAt: Date,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export default mongoose.model('Block', blockSchema);
+export default mongoose.model("Block", blockSchema);
