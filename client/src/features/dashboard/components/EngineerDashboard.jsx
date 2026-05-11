@@ -30,7 +30,7 @@ export default function EngineerDashboard() {
   const myRejections = approvals.filter((a) => a.engineerId === user?.id && a.status === 'Rejected');
 
   async function doAdvance(b) {
-    if (b.status === 'LVS') {
+    if (b.status === 'Review') {
       await submitForReview(b.id, user.id);
       toast.success('Submitted for review');
     } else {
@@ -57,8 +57,8 @@ export default function EngineerDashboard() {
           <thead><tr><th>Block Name</th><th>Type</th><th>Stage</th><th>Est. Hours</th><th>Action</th></tr></thead>
           <tbody>
             {mine.map((b) => {
-              const disabled = b.status === 'Review' || b.status === 'Completed';
-              const isLvs = b.status === 'LVS';
+              const disabled = b.status === 'Completed';
+              const isReview = b.status === 'Review';
               return (
                 <tr key={b.id}>
                   <td style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}>{b.name}</td>
@@ -67,7 +67,7 @@ export default function EngineerDashboard() {
                   <td>{b.estimatedHours}h</td>
                   <td>
                     <button className="btn btn-primary" disabled={disabled} onClick={() => setConfirm(b)}>
-                      {isLvs ? 'Submit for Review' : 'Advance Stage'}
+                      {isReview ? 'Submit for Review' : 'Advance Stage'}
                     </button>
                   </td>
                 </tr>
@@ -100,7 +100,7 @@ export default function EngineerDashboard() {
       <ConfirmDialog
         isOpen={!!confirm}
         title="Advance stage?"
-        message={confirm ? `${confirm.status === 'LVS' ? 'Submit' : 'Advance'} ${confirm.name} from ${confirm.status}?` : ''}
+        message={confirm ? `${confirm.status === 'Review' ? 'Submit' : 'Advance'} ${confirm.name} from ${confirm.status}?` : ''}
         onConfirm={() => doAdvance(confirm)}
         onCancel={() => setConfirm(null)}
       />

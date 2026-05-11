@@ -186,11 +186,32 @@ router.put('/:id', async (req, res) => {
       }
     }
 
+    const existingBlock = await Block.findById(req.params.id);
+    if (!existingBlock) return res.status(404).json({ error: 'Block not found' });
+
+    const nextStatus = req.body.status ?? existingBlock.status;
+    const statusChanged = nextStatus !== existingBlock.status;
+    if (statusChanged && nextStatus !== 'Not Started') {
+      const dependencyIds = (existingBlock.dependsOn || []).map(normalizeId).filter(Boolean);
+      if (dependencyIds.length > 0) {
+        const incompleteDependencies = await Block.find({
+          _id: { $in: dependencyIds },
+          status: { $ne: 'Completed' },
+        }).select('name status');
+
+        if (incompleteDependencies.length > 0) {
+          const names = incompleteDependencies.map((dep) => dep.name).join(', ');
+          return res.status(400).json({
+            error: `Cannot progress block until dependencies are completed: ${names}`,
+          });
+        }
+      }
+    }
+
     const block = await Block.findByIdAndUpdate(req.params.id, req.body, { new: true })
       .populate('assignedEngineerId')
       .populate('dependsOn');
-    
-    if (!block) return res.status(404).json({ error: 'Block not found' });
+
     res.json(block);
   } catch (error) {
     console.error('Block update error:', error);

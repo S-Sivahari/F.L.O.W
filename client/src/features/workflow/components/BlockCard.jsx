@@ -21,13 +21,17 @@ export default function BlockCard({ block, onChanged, onShowLog }) {
   const inReview = block.status === 'Review';
   const isCompleted = block.status === 'Completed';
   const inProgress = block.status === 'In Progress';
-  const showSubmitReview = isAssigned && block.status === 'In Progress';
+  const showSubmitReview = isAssigned && block.status === 'Review';
 
   async function handleAdvance() {
-    await advanceStage(block.id, user.id);
-    toast.success(`Advanced ${block.name}`);
-    setConfirmOpen(false);
-    onChanged();
+    try {
+      await advanceStage(block.id, user.id);
+      toast.success(`Advanced ${block.name}`);
+      setConfirmOpen(false);
+      onChanged();
+    } catch (error) {
+      toast.error(error.message || "Unable to advance stage");
+    }
   }
 
   async function handleSubmitReview() {
