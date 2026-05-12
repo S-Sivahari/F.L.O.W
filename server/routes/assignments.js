@@ -2,6 +2,7 @@ import express from 'express';
 import Assignment from '../models/Assignment.js';
 import Block from '../models/Block.js';
 import User from '../models/User.js';
+import { notifyBlockAssigned } from '../services/notificationService.js';
 
 const router = express.Router();
 const MAX_BLOCKS_PER_ENGINEER = 5;
@@ -102,6 +103,13 @@ router.post('/', async (req, res) => {
 
     // Update block
     await Block.findByIdAndUpdate(blockId, { assignedEngineerId: engineerId });
+
+    // Notify the engineer about the assignment
+    const engineer = await User.findById(engineerId);
+    const block = await Block.findById(blockId);
+    if (engineer && block) {
+      await notifyBlockAssigned(block, engineer, req.user);
+    }
 
     console.log('✅ Assignment created:', assignment._id);
     res.status(201).json(populated);

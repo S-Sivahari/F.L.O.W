@@ -69,4 +69,34 @@ const blockSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Middleware to set completedAt when status changes to Completed
+blockSchema.pre('save', function(next) {
+  if (this.isModified('status')) {
+    if (this.status === 'Completed' && !this.completedAt) {
+      this.completedAt = new Date();
+    }
+    // Add to status history
+    this.statusHistory.push({
+      status: this.status,
+      timestamp: new Date()
+    });
+  }
+  next();
+});
+
+// Also handle findOneAndUpdate
+blockSchema.pre('findOneAndUpdate', function(next) {
+  const update = this.getUpdate();
+  if (update.status === 'Completed' || update.$set?.status === 'Completed') {
+    if (!update.completedAt && !update.$set?.completedAt) {
+      if (update.$set) {
+        update.$set.completedAt = new Date();
+      } else {
+        update.completedAt = new Date();
+      }
+    }
+  }
+  next();
+});
+
 export default mongoose.model("Block", blockSchema);

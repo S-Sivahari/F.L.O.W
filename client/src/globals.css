@@ -25,8 +25,8 @@
   --stage-review: #f59e0b;
   --stage-completed: #22c55e;
 
-  --font-display: "IBM Plex Mono", monospace;
-  --font-body: "DM Sans", sans-serif;
+  --font-display: "Work Sans", "IBM Plex Mono", monospace;
+  --font-body: "Work Sans", "DM Sans", sans-serif;
 
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -60,9 +60,10 @@ body {
   font-family: var(--font-body);
   background: var(--bg-base);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 17.5px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  zoom: 1.25;
 }
 h1,
 h2,
@@ -198,6 +199,26 @@ label {
   padding: 24px;
   flex: 1;
   overflow-x: auto;
+}
+
+/* Admin Dashboard Custom Font */
+.page-header h1 {
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.card h3, .card h4 {
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 600;
+}
+
+.data-table th {
+  font-family: 'Work Sans', sans-serif;
+}
+
+.chip {
+  font-family: 'Work Sans', sans-serif;
 }
 
 /* Sidebar */
@@ -431,6 +452,29 @@ label {
   justify-content: center;
   z-index: 100;
   animation: fadeIn 150ms ease;
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 150ms ease;
+}
+.modal-content {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-modal);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow: auto;
+  animation: slideUp 200ms ease;
+  padding: 24px;
 }
 .modal {
   background: var(--bg-surface);
@@ -1174,6 +1218,9 @@ label {
   .sidebar-user-info {
     display: none;
   }
+  .btn span {
+    display: none;
+  }
 }
 @media (max-width: 768px) {
   .sidebar {
@@ -1187,6 +1234,9 @@ label {
   .sidebar.open .sidebar-link span,
   .sidebar.open .sidebar-logo span,
   .sidebar.open .sidebar-user-info {
+    display: inline;
+  }
+  .sidebar.open .btn span {
     display: inline;
   }
   .app-main {

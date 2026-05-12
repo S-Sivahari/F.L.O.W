@@ -1,9 +1,11 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuth from '../shared/hooks/useAuth.js';
 import { canAccess } from '../shared/utils/roleGuard.js';
+import { ROLES } from '../shared/constants/roles.js';
 import LoadingSpinner from '../shared/components/LoadingSpinner.jsx';
 
 import LoginPage from '../features/auth/pages/LoginPage.jsx';
+import PendingPage from '../pages/PendingPage.jsx';
 import DashboardPage from '../features/dashboard/pages/DashboardPage.jsx';
 import BlocksPage from '../features/blocks/pages/BlocksPage.jsx';
 import EffortPage from '../features/effort/pages/EffortPage.jsx';
@@ -26,6 +28,7 @@ function Protected({ action, children }) {
   const location = useLocation();
   if (loading) return <LoadingSpinner fullPage />;
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (role === ROLES.PENDING) return <Navigate to="/pending" replace />;
   if (action && !canAccess(role, action)) return <Navigate to="/dashboard" replace />;
   return children;
 }
@@ -36,6 +39,7 @@ export default function AppRouter() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/pending" element={<PendingPage />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<Protected action="view:dashboard"><DashboardPage /></Protected>} />
       <Route path="/blocks" element={<Protected action="view:blocks"><BlocksPage /></Protected>} />

@@ -45,6 +45,7 @@ if (
   const session = (await import("express-session")).default;
   const passport = (await import("./config/passport.js")).default;
   const { connectDB } = await import("./config/database.js");
+  const { startCleanupScheduler } = await import("./services/cleanupService.js");
 
   // Routes
   const authRoutes = (await import("./routes/auth.js")).default;
@@ -55,6 +56,9 @@ if (
   const usersRoutes = (await import("./routes/users.js")).default;
   const workflowLogsRoutes = (await import("./routes/workflow-logs.js"))
     .default;
+  const notificationsRoutes = (await import("./routes/notifications.js"))
+    .default;
+  const adminRoutes = (await import("./routes/admin.js")).default;
 
   const app = express();
   const PORT = process.env.PORT || 5000;
@@ -91,6 +95,8 @@ if (
   app.use("/api/effort", effortRoutes);
   app.use("/api/users", usersRoutes);
   app.use("/api/workflow-logs", workflowLogsRoutes);
+  app.use("/api/notifications", notificationsRoutes);
+  app.use("/api/admin", adminRoutes);
 
   // Health check
   app.get("/health", (req, res) => {
@@ -121,6 +127,9 @@ if (
         "   The server is still running, but DB-backed routes will fail until this is fixed.",
       );
     });
+    
+    // Start the cleanup scheduler after DB connection
+    startCleanupScheduler();
   } else {
     console.warn(
       "⚠️  Skipping MongoDB connection because MONGODB_URI is not set.",

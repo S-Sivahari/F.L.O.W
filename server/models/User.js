@@ -15,8 +15,8 @@ const userSchema = new mongoose.Schema(
     avatar: String,
     role: {
       type: String,
-      enum: ['ENGINEER', 'MANAGER', 'ADMIN'],
-      default: 'ENGINEER',
+      enum: ['ENGINEER', 'MANAGER', 'ADMIN', 'PENDING'],
+      default: 'PENDING',
     },
     active: {
       type: Boolean,
@@ -25,6 +25,19 @@ const userSchema = new mongoose.Schema(
     skills: {
       type: [String],
       default: [],
+    },
+    firstLoginAt: {
+      type: Date,
+      default: null,
+    },
+    roleAssignedAt: {
+      type: Date,
+      default: null,
+    },
+    roleAssignedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
     },
   },
   { timestamps: true }

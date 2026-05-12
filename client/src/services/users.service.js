@@ -47,6 +47,13 @@ export async function updateUserSkills(userId, skills) {
   return normalizeUser(updated);
 }
 
+export async function deleteUser(userId) {
+  await apiRequest(`/api/users/${userId}`, {
+    method: "DELETE",
+  });
+  return true;
+}
+
 export async function enableEngineerAccess({ email, name }) {
   const response = await apiRequest("/api/users/engineers/enable", {
     method: "POST",

@@ -8,13 +8,12 @@ import { getApprovals } from "../../../services/approvals.service.js";
 import { getAssignments } from "../../../services/assignments.service.js";
 import {
   getUsers,
-  setUserActive,
+  deleteUser,
   updateUserRole,
   updateUserSkills,
   upsertUser,
 } from "../../../services/users.service.js";
 import {
-  bulkReassignEngineer,
   getLoginAttempts,
   forceBlockStage,
 } from "../../../services/admin.service.js";
@@ -25,13 +24,17 @@ import BlockFormModal from "../../blocks/components/BlockFormModal.jsx";
 export default function AdminDashboard() {
   const { user } = useAuth();
   const toast = useToast();
-  const [tab, setTab] = useState("users");
+  const [tab, setTab] = useState("pending");
   const [users, setUsers] = useState([]);
   const [blocks, setBlocks] = useState([]);
   const [approvals, setApprovals] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [attempts, setAttempts] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [roleFilter, setRoleFilter] = useState("ALL");
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [selectedBlock, setSelectedBlock] = useState(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -39,11 +42,9 @@ export default function AdminDashboard() {
     skills: "",
   });
   const [skillsDraft, setSkillsDraft] = useState({});
-  const [selectedBlockId, setSelectedBlockId] = useState("");
-  const [selectedStage, setSelectedStage] = useState(STAGES[0]);
-  const [reassignFrom, setReassignFrom] = useState("");
-  const [reassignTo, setReassignTo] = useState("");
+  const [blockStageDraft, setBlockStageDraft] = useState({});
   const [formOpen, setFormOpen] = useState(false);
+  const [auditFilter, setAuditFilter] = useState("ALL");
 
   async function refreshAll() {
     const [
@@ -95,6 +96,62 @@ export default function AdminDashboard() {
     return () => {
       mounted = false;
     };
+  }, [blocks]);
+
+  const filteredAuditLogs = useMemo(() => {
+    // Combine workflow logs and access attempts
+    const workflowLogs = auditLogs.map(log => ({
+      ...log,
+      type: 'workflow',
+      action: log.stage,
+      actor: log.actorName || 'System',
+      timestamp: log.timestamp,
+      blockName: blocks.find((b) => b.id === log.blockId)?.name || 'Block',
+    }));
+
+    const accessLogs = attempts.map(attempt => ({
+      ...attempt,
+      type: attempt.status === 'ALLOWED' ? 'access_approved' : 'access_denied',
+      action: attempt.status === 'ALLOWED' ? 'Access Approved' : 'Access Denied',
+      actor: attempt.email,
+      timestamp: attempt.createdAt,
+      reason: attempt.reason || '—',
+    }));
+
+    const allLogs = [...workflowLogs, ...accessLogs].sort(
+      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+    );
+
+    if (auditFilter === "ALL") return allLogs;
+    if (auditFilter === "WORKFLOW") return workflowLogs;
+    if (auditFilter === "ACCESS_DENIED") return accessLogs.filter(log => log.type === 'access_denied');
+    if (auditFilter === "ACCESS_APPROVED") return accessLogs.filter(log => log.type === 'access_approved');
+    return allLogs;
+  }, [auditLogs, attempts, blocks, auditFilter]);
+
+  const filteredUsers = useMemo(() => {
+    if (roleFilter === "ALL") return users;
+    return users.filter((u) => u.role === roleFilter);
+  }, [users, roleFilter]);
+
+  const pendingUsers = useMemo(() => {
+    return users.filter((u) => u.role === ROLES.PENDING);
+  }, [users]);
+
+  const activeUsers = useMemo(() => {
+    return users.filter((u) => u.role !== ROLES.PENDING);
+  }, [users]);
+
+  const unassignedBlocks = useMemo(() => {
+    return blocks.filter((b) => !b.assignedEngineerId);
+  }, [blocks]);
+
+  const blocksByStage = useMemo(() => {
+    return STAGES.map((stage) => ({
+      stage,
+      count: blocks.filter((b) => b.status === stage).length,
+      blocks: blocks.filter((b) => b.status === stage),
+    }));
   }, [blocks]);
 
   const engineers = useMemo(
@@ -169,16 +226,18 @@ export default function AdminDashboard() {
       await upsertUser(form);
       toast.success("User registered and enabled");
       setForm({ name: "", email: "", role: ROLES.ENGINEER, skills: "" });
+      setShowUserModal(false);
       await refreshAll();
     } catch (error) {
       toast.error(error.message);
     }
   }
 
-  async function handleToggleActive(target) {
+  async function handleDeleteUser(target) {
+    if (!confirm(`Are you sure you want to delete ${target.name}?`)) return;
     try {
-      await setUserActive(target.id, !target.active);
-      toast.success(target.active ? "User deactivated" : "User activated");
+      await deleteUser(target.id);
+      toast.success("User deleted");
       await refreshAll();
     } catch (error) {
       toast.error(error.message);
@@ -221,26 +280,24 @@ export default function AdminDashboard() {
     }
   }
 
-  async function handleDeleteBlock(blockId) {
+  async function handleBlockStageChange(blockId, newStage) {
     try {
-      await deleteBlock(blockId);
-      toast.success("Block deleted");
+      await forceBlockStage(blockId, {
+        status: newStage,
+        performedBy: user?.id,
+        note: "Admin stage change",
+      });
+      toast.success("Stage updated");
       await refreshAll();
     } catch (error) {
       toast.error(error.message);
     }
   }
 
-  async function handleBulkReassign() {
-    if (!reassignFrom || !reassignTo || reassignFrom === reassignTo) {
-      toast.error("Pick two different engineers");
-      return;
-    }
+  async function handleDeleteBlock(blockId) {
     try {
-      const response = await bulkReassignEngineer(reassignFrom, reassignTo);
-      toast.success(response.message || "Reassigned");
-      setReassignFrom("");
-      setReassignTo("");
+      await deleteBlock(blockId);
+      toast.success("Block deleted");
       await refreshAll();
     } catch (error) {
       toast.error(error.message);
@@ -257,13 +314,11 @@ export default function AdminDashboard() {
         style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}
       >
         {[
+          ["pending", `Pending Users ${pendingUsers.length > 0 ? `(${pendingUsers.length})` : ""}`],
           ["users", "User Management"],
-          ["createblock", "Create Block"],
-          ["blocks", "Block Controls"],
-          ["reassign", "Engineer Reassignment"],
-          ["attempts", "Access Denied"],
+          ["blocks", "Block Management"],
+          ["overview", "System Overview"],
           ["audit", "Audit Log"],
-          ["analytics", "Global Analytics"],
         ].map(([key, label]) => (
           <button
             key={key}
@@ -275,63 +330,92 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {tab === "pending" && (
+        <div className="card">
+          <div style={{ marginBottom: 16 }}>
+            <h3>First-Time User Onboarding</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 8 }}>
+              Users who have logged in via Google OAuth but have not been assigned a role yet. 
+              They cannot access any features until you assign them a role.
+            </p>
+          </div>
+
+          {pendingUsers.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">✓</div>
+              <p>No pending users. All users have been assigned roles.</p>
+            </div>
+          ) : (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>First Login</th>
+                  <th>Assign Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingUsers.map((u) => (
+                  <tr key={u.id}>
+                    <td>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td>{u.createdAt ? new Date(u.createdAt).toLocaleString() : '—'}</td>
+                    <td>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <select
+                          defaultValue=""
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              handleRoleChange(u, e.target.value);
+                            }
+                          }}
+                          style={{ minWidth: 150 }}
+                        >
+                          <option value="">Select Role</option>
+                          <option value={ROLES.ADMIN}>Admin</option>
+                          <option value={ROLES.MANAGER}>Manager</option>
+                          <option value={ROLES.ENGINEER}>Engineer</option>
+                        </select>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
       {tab === "users" && (
         <div className="card">
-          <h3 style={{ marginBottom: 10 }}>Pre-register users</h3>
-          <form
-            onSubmit={handleUpsertUser}
-            className="form-grid"
-            style={{ marginBottom: 16 }}
-          >
-            <div className="form-row">
-              <label>Name</label>
-              <input
-                value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
-                }
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label>Gmail</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, email: e.target.value }))
-                }
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label>Role</label>
-              <select
-                value={form.role}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, role: e.target.value }))
-                }
-              >
-                <option value={ROLES.MANAGER}>Manager</option>
-                <option value={ROLES.ENGINEER}>Engineer</option>
-              </select>
-            </div>
-            <div className="form-row">
-              <label>Skills (comma separated)</label>
-              <input
-                value={form.skills}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, skills: e.target.value }))
-                }
-                placeholder="DRC, LVS, Current Mirror"
-              />
-            </div>
-            <div style={{ alignSelf: "end" }}>
-              <button className="btn btn-primary" type="submit">
-                Save User
-              </button>
-            </div>
-          </form>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h3>User Management</h3>
+            <button
+              className="btn btn-primary"
+              onClick={() => setShowUserModal(true)}
+            >
+              + Add User
+            </button>
+          </div>
+
+          <div style={{ marginBottom: 16, display: "flex", gap: 8, alignItems: "center" }}>
+            <label style={{ fontWeight: 600, fontSize: 14 }}>Filter by Role:</label>
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              style={{ padding: "6px 12px" }}
+            >
+              <option value="ALL">All Users</option>
+              <option value={ROLES.PENDING}>Pending</option>
+              <option value={ROLES.ADMIN}>Admin</option>
+              <option value={ROLES.MANAGER}>Manager</option>
+              <option value={ROLES.ENGINEER}>Engineer</option>
+            </select>
+            <span style={{ marginLeft: 8, color: "var(--text-secondary)", fontSize: 13 }}>
+              ({filteredUsers.length} users)
+            </span>
+          </div>
 
           <table className="data-table">
             <thead>
@@ -340,12 +424,11 @@ export default function AdminDashboard() {
                 <th>Email</th>
                 <th>Role</th>
                 <th>Skills</th>
-                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {filteredUsers.map((u) => (
                 <tr key={u.id}>
                   <td>{u.name}</td>
                   <td>{u.email}</td>
@@ -353,105 +436,31 @@ export default function AdminDashboard() {
                     <select
                       value={u.role}
                       onChange={(e) => handleRoleChange(u, e.target.value)}
+                      disabled={u.role === ROLES.PENDING}
                     >
+                      <option value={ROLES.PENDING}>Pending</option>
                       <option value={ROLES.MANAGER}>Manager</option>
                       <option value={ROLES.ENGINEER}>Engineer</option>
                       <option value={ROLES.ADMIN}>Admin</option>
                     </select>
                   </td>
                   <td style={{ minWidth: 260 }}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <input
-                        value={skillsDraft[u.id] ?? (u.skills || []).join(", ")}
-                        onChange={(e) =>
-                          setSkillsDraft((prev) => ({
-                            ...prev,
-                            [u.id]: e.target.value,
-                          }))
-                        }
-                        placeholder="Add skill tags"
-                      />
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => handleSaveSkills(u)}
-                      >
-                        Save
-                      </button>
-                    </div>
+                    <input
+                      value={skillsDraft[u.id] ?? (u.skills || []).join(", ")}
+                      onChange={(e) =>
+                        setSkillsDraft((prev) => ({
+                          ...prev,
+                          [u.id]: e.target.value,
+                        }))
+                      }
+                      onBlur={() => handleSaveSkills(u)}
+                      placeholder="Add skill tags"
+                    />
                   </td>
-                  <td>{u.active ? "Active" : "Inactive"}</td>
-                  <td>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => handleToggleActive(u)}
-                    >
-                      {u.active ? "Deactivate" : "Activate"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {tab === "blocks" && (
-        <div className="card">
-          <h3 style={{ marginBottom: 10 }}>Full block control</h3>
-          <div className="form-grid" style={{ marginBottom: 16 }}>
-            <div className="form-row">
-              <label>Block</label>
-              <select
-                value={selectedBlockId}
-                onChange={(e) => setSelectedBlockId(e.target.value)}
-              >
-                <option value="">Select block</option>
-                {blocks.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-row">
-              <label>Force Stage</label>
-              <select
-                value={selectedStage}
-                onChange={(e) => setSelectedStage(e.target.value)}
-              >
-                {STAGES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div style={{ alignSelf: "end", display: "flex", gap: 8 }}>
-              <button className="btn btn-primary" onClick={handleForceStage}>
-                Force Move
-              </button>
-            </div>
-          </div>
-
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Block</th>
-                <th>Status</th>
-                <th>Assigned</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {blocks.map((b) => (
-                <tr key={b.id}>
-                  <td>{b.name}</td>
-                  <td>{b.status}</td>
-                  <td>{b.assignedEngineer?.name || "Unassigned"}</td>
                   <td>
                     <button
                       className="btn btn-danger"
-                      onClick={() => handleDeleteBlock(b.id)}
+                      onClick={() => handleDeleteUser(u)}
                     >
                       Delete
                     </button>
@@ -460,117 +469,152 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
+
+          {showUserModal && (
+            <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <h3 style={{ marginBottom: 16 }}>Pre-register User</h3>
+                <form onSubmit={handleUpsertUser} className="form-grid">
+                  <div className="form-row">
+                    <label>Name *</label>
+                    <input
+                      value={form.name}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, name: e.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>Gmail *</label>
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, email: e.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>Role *</label>
+                    <select
+                      value={form.role}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, role: e.target.value }))
+                      }
+                    >
+                      <option value={ROLES.MANAGER}>Manager</option>
+                      <option value={ROLES.ENGINEER}>Engineer</option>
+                    </select>
+                  </div>
+                  <div className="form-row">
+                    <label>Skills (comma separated)</label>
+                    <input
+                      value={form.skills}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, skills: e.target.value }))
+                      }
+                      placeholder="DRC, LVS, Current Mirror"
+                    />
+                  </div>
+                  <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowUserModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button className="btn btn-primary" type="submit">
+                      Save User
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {tab === "reassign" && (
+      {tab === "blocks" && (
         <div className="card">
-          <h3 style={{ marginBottom: 10 }}>Bulk reassign engineer blocks</h3>
-          <div className="form-grid">
-            <div className="form-row">
-              <label>From Engineer</label>
-              <select
-                value={reassignFrom}
-                onChange={(e) => setReassignFrom(e.target.value)}
-              >
-                <option value="">Select engineer</option>
-                {engineers.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-row">
-              <label>To Engineer</label>
-              <select
-                value={reassignTo}
-                onChange={(e) => setReassignTo(e.target.value)}
-              >
-                <option value="">Select engineer</option>
-                {engineers.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div style={{ alignSelf: "end" }}>
-              <button className="btn btn-primary" onClick={handleBulkReassign}>
-                Reassign All
-              </button>
-            </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h3>Block Management</h3>
+            <button
+              className="btn btn-primary"
+              onClick={() => setFormOpen(true)}
+            >
+              + Create Block
+            </button>
           </div>
-        </div>
-      )}
 
-      {tab === "attempts" && (
-        <div className="card">
-          <h3 style={{ marginBottom: 10 }}>Access denied attempts</h3>
+          {unassignedBlocks.length > 0 && (
+            <div className="alert-banner" style={{ marginBottom: 16 }}>
+              <div>
+                <strong>⚠️ {unassignedBlocks.length} Unassigned Block(s)</strong>
+                <div style={{ fontSize: 12, marginTop: 4 }}>
+                  These blocks have no engineer assigned and need attention.
+                </div>
+              </div>
+            </div>
+          )}
+
           <table className="data-table">
             <thead>
               <tr>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Reason</th>
-                <th>When</th>
+                <th>Block Name</th>
+                <th>Type</th>
+                <th>Stage</th>
+                <th>Assigned Engineer</th>
+                <th>Est. Hours</th>
+                <th>Actual Hours</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {attempts.map((a) => (
-                <tr key={a.id}>
-                  <td>{a.email}</td>
-                  <td>{a.status}</td>
-                  <td>{a.reason || "—"}</td>
-                  <td>{new Date(a.createdAt).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {tab === "audit" && (
-        <div className="card">
-          <h3 style={{ marginBottom: 10 }}>System audit log</h3>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Block</th>
-                <th>Action</th>
-                <th>Actor</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {auditLogs.map((log) => (
-                <tr key={log.id}>
+              {blocks.map((b) => (
+                <tr key={b.id} style={{ background: !b.assignedEngineerId ? 'rgba(245, 158, 11, 0.05)' : 'inherit' }}>
                   <td>
-                    {blocks.find((b) => b.id === log.blockId)?.name || "Block"}
+                    <strong>{b.name}</strong>
+                    {!b.assignedEngineerId && <span style={{ marginLeft: 8, color: 'var(--accent-warning)', fontSize: 11 }}>⚠️ UNASSIGNED</span>}
                   </td>
-                  <td>{log.stage}</td>
-                  <td>{log.actorName || "System"}</td>
-                  <td>{new Date(log.timestamp).toLocaleString()}</td>
+                  <td>{b.type}</td>
+                  <td>
+                    <span className="status-badge">
+                      <span className="dot" style={{ background: `var(--stage-${b.status.toLowerCase().replace(' ', '-')})` }}></span>
+                      {b.status}
+                    </span>
+                  </td>
+                  <td>{b.assignedEngineer?.name || <span style={{ color: 'var(--text-muted)' }}>Unassigned</span>}</td>
+                  <td>{b.estimatedHours || 0}h</td>
+                  <td>{b.actualHours || 0}h</td>
+                  <td>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => {
+                          setSelectedBlock(b);
+                          setShowBlockModal(true);
+                        }}
+                        style={{ padding: "4px 10px", fontSize: 12 }}
+                      >
+                        View
+                      </button>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => handleDeleteBlock(b.id)}
+                        style={{ padding: "4px 10px", fontSize: 12 }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
 
-      {tab === "createblock" && (
-        <div className="card">
-          <h3 style={{ marginBottom: 10 }}>Create Layout Block</h3>
-          <p style={{ marginBottom: 16, color: "var(--text-secondary)", fontSize: 12 }}>
-            Add a new layout block to the workflow. You can set dependencies, complexity, and effort estimates.
-          </p>
-          <button
-            className="btn btn-primary"
-            onClick={() => setFormOpen(true)}
-            style={{ marginBottom: 16 }}
-          >
-            + New Block
-          </button>
           <BlockFormModal
             isOpen={formOpen}
             initial={null}
@@ -580,59 +624,202 @@ export default function AdminDashboard() {
               await refreshAll();
             }}
           />
+
+          {showBlockModal && selectedBlock && (
+            <div className="modal-overlay" onClick={() => setShowBlockModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
+                <h3 style={{ marginBottom: 16 }}>Block Details</h3>
+                <div style={{ display: "grid", gap: 12 }}>
+                  <div><strong>Name:</strong> {selectedBlock.name}</div>
+                  <div><strong>Type:</strong> {selectedBlock.type}</div>
+                  <div><strong>Description:</strong> {selectedBlock.description || '—'}</div>
+                  <div><strong>Technology Node:</strong> {selectedBlock.techNode || '—'}</div>
+                  <div><strong>Complexity:</strong> <span className={`complexity-badge complexity-${selectedBlock.complexity}`}>{selectedBlock.complexity}</span></div>
+                  <div><strong>Status:</strong> {selectedBlock.status}</div>
+                  <div><strong>Assigned Engineer:</strong> {selectedBlock.assignedEngineer?.name || 'Unassigned'}</div>
+                  <div><strong>Estimated Hours:</strong> {selectedBlock.estimatedHours || 0}h</div>
+                  <div><strong>Actual Hours:</strong> {selectedBlock.actualHours || 0}h</div>
+                  <div><strong>Estimated Area:</strong> {selectedBlock.estimatedArea || '—'} {selectedBlock.areaUnit || ''}</div>
+                  <div><strong>Created:</strong> {new Date(selectedBlock.createdAt).toLocaleString()}</div>
+                  <div><strong>Last Updated:</strong> {new Date(selectedBlock.updatedAt).toLocaleString()}</div>
+                </div>
+                <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end" }}>
+                  <button className="btn btn-secondary" onClick={() => setShowBlockModal(false)}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {tab === "analytics" && (
+      {tab === "overview" && (
         <div className="card">
-          <h3 style={{ marginBottom: 10 }}>Global analytics</h3>
-          <div className="stat-grid" style={{ marginBottom: 16 }}>
-            <div className="stat-card">
-              <div className="stat-label">Total users</div>
-              <div className="stat-value">{analytics.totalUsers}</div>
+          <h3 style={{ marginBottom: 16 }}>System-Wide Overview</h3>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 20 }}>
+            <div style={{ padding: 12, background: "var(--bg-elevated)", borderRadius: 6, border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4, fontWeight: 600 }}>Total Blocks</div>
+              <div style={{ fontSize: 24, fontWeight: 700 }}>{blocks.length}</div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Managers</div>
-              <div className="stat-value">{managers.length}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Engineers</div>
-              <div className="stat-value">{engineers.length}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">On-time completion</div>
-              <div className="stat-value">
-                {analytics.onTimeCompletionRate}%
+            <div style={{ padding: 12, background: "var(--bg-elevated)", borderRadius: 6, border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4, fontWeight: 600 }}>Unassigned</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: unassignedBlocks.length > 0 ? 'var(--accent-warning)' : 'inherit' }}>
+                {unassignedBlocks.length}
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Avg effort variance</div>
-              <div className="stat-value">
-                {analytics.avgEffortVariancePct}%
+            <div style={{ padding: 12, background: "var(--bg-elevated)", borderRadius: 6, border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4, fontWeight: 600 }}>Total Users</div>
+              <div style={{ fontSize: 24, fontWeight: 700 }}>{users.length}</div>
+            </div>
+            <div style={{ padding: 12, background: "var(--bg-elevated)", borderRadius: 6, border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4, fontWeight: 600 }}>Pending</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: pendingUsers.length > 0 ? 'var(--accent-warning)' : 'inherit' }}>
+                {pendingUsers.length}
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Top bottleneck</div>
-              <div className="stat-value">{analytics.bottleneck}</div>
+            <div style={{ padding: 12, background: "var(--bg-elevated)", borderRadius: 6, border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4, fontWeight: 600 }}>Engineers</div>
+              <div style={{ fontSize: 24, fontWeight: 700 }}>{engineers.length}</div>
+            </div>
+            <div style={{ padding: 12, background: "var(--bg-elevated)", borderRadius: 6, border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4, fontWeight: 600 }}>Managers</div>
+              <div style={{ fontSize: 24, fontWeight: 700 }}>{managers.length}</div>
             </div>
           </div>
-          <h4 style={{ marginBottom: 8 }}>Engineer utilization</h4>
+
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+            <div>
+              <h4 style={{ marginBottom: 12, fontSize: 14 }}>Blocks by Stage</h4>
+              <div style={{ display: "grid", gap: 8 }}>
+                {blocksByStage.map(({ stage, count, blocks: stageBlocks }) => (
+                  <div key={stage} style={{ 
+                    padding: 10, 
+                    background: 'var(--bg-elevated)', 
+                    borderRadius: 6,
+                    border: '1px solid var(--border)',
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ 
+                        width: 8, 
+                        height: 8, 
+                        borderRadius: '50%',
+                        background: `var(--stage-${stage.toLowerCase().replace(' ', '-')})` 
+                      }}></span>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{stage}</span>
+                    </div>
+                    <span style={{ 
+                      background: 'var(--bg-surface)', 
+                      padding: '2px 8px', 
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 600
+                    }}>
+                      {count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ marginBottom: 12, fontSize: 14 }}>Effort Summary</h4>
+              <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ padding: 10, background: "var(--bg-elevated)", borderRadius: 6, border: "1px solid var(--border)" }}>
+                  <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4 }}>Estimated</div>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>
+                    {blocks.reduce((sum, b) => sum + (Number(b.estimatedHours) || 0), 0)}h
+                  </div>
+                </div>
+                <div style={{ padding: 10, background: "var(--bg-elevated)", borderRadius: 6, border: "1px solid var(--border)" }}>
+                  <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4 }}>Actual</div>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>
+                    {blocks.reduce((sum, b) => sum + (Number(b.actualHours) || 0), 0)}h
+                  </div>
+                </div>
+                <div style={{ padding: 10, background: "var(--bg-elevated)", borderRadius: 6, border: "1px solid var(--border)" }}>
+                  <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4 }}>Variance</div>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>
+                    {(() => {
+                      const est = blocks.reduce((sum, b) => sum + (Number(b.estimatedHours) || 0), 0);
+                      const act = blocks.reduce((sum, b) => sum + (Number(b.actualHours) || 0), 0);
+                      const variance = est > 0 ? Math.round(((act - est) / est) * 100) : 0;
+                      return (
+                        <span className={variance > 0 ? 'variance-neg' : variance < 0 ? 'variance-pos' : ''}>
+                          {variance > 0 ? '+' : ''}{variance}%
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "audit" && (
+        <div className="card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div>
+              <h3>System Audit Log</h3>
+              <p style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 4 }}>
+                Complete audit trail of all workflow transitions, approvals, rejections, and access attempts.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <label style={{ fontWeight: 600, fontSize: 14 }}>Filter:</label>
+              <select
+                value={auditFilter}
+                onChange={(e) => setAuditFilter(e.target.value)}
+                style={{ padding: "6px 12px" }}
+              >
+                <option value="ALL">All Events</option>
+                <option value="WORKFLOW">Workflow Changes</option>
+                <option value="ACCESS_APPROVED">Access Approved</option>
+                <option value="ACCESS_DENIED">Access Denied</option>
+              </select>
+              <span style={{ marginLeft: 8, color: "var(--text-secondary)", fontSize: 13 }}>
+                ({filteredAuditLogs.length} events)
+              </span>
+            </div>
+          </div>
+
           <table className="data-table">
             <thead>
               <tr>
-                <th>Engineer</th>
-                <th>Load</th>
-                <th>Utilization</th>
-                <th>Variance</th>
+                <th>Type</th>
+                <th>Block/Email</th>
+                <th>Action</th>
+                <th>Actor</th>
+                <th>Details</th>
+                <th>Time</th>
               </tr>
             </thead>
             <tbody>
-              {analytics.engineerUtilization.map((row) => (
-                <tr key={row.id}>
-                  <td>{row.name}</td>
-                  <td>{row.load}</td>
-                  <td>{row.utilizationPct}%</td>
-                  <td>{row.variancePct}%</td>
+              {filteredAuditLogs.map((log, index) => (
+                <tr key={log.id || index}>
+                  <td>
+                    <span style={{
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      background: log.type === 'workflow' ? 'var(--accent-primary)' : log.type === 'access_approved' ? 'var(--accent-secondary)' : 'var(--accent-warning)',
+                      color: '#fff'
+                    }}>
+                      {log.type === 'workflow' ? 'WORKFLOW' : log.type === 'access_approved' ? 'ACCESS' : 'ACCESS'}
+                    </span>
+                  </td>
+                  <td>{log.blockName || log.email || '—'}</td>
+                  <td>{log.action}</td>
+                  <td>{log.actor}</td>
+                  <td>{log.reason || log.status || '—'}</td>
+                  <td>{new Date(log.timestamp).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

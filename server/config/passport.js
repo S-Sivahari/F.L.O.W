@@ -2,6 +2,7 @@ import passport from 'passport';
 import GoogleStrategy from 'passport-google-oauth20';
 import User from '../models/User.js';
 import LoginAttempt from '../models/LoginAttempt.js';
+import { notifyPendingUser } from '../services/notificationService.js';
 
 /** Pre-approved Google accounts (always allowed; role enforced on each login). */
 const HARDCODED_ROLE_BY_EMAIL = {
@@ -63,6 +64,8 @@ passport.use(
             avatar: profile.photos?.[0]?.value,
             role: hardcodedRole,
             active: true,
+            firstLoginAt: new Date(),
+            roleAssignedAt: new Date(),
           });
           await logAttempt({
             email: normalizedEmail,
@@ -74,13 +77,25 @@ passport.use(
         }
 
         if (!user) {
+          // Create user with PENDING role for first-time login
+          user = await User.create({
+            email: normalizedEmail,
+            name: profile.displayName?.trim() || normalizedEmail.split('@')[0],
+            googleId: profile.id,
+            avatar: profile.photos?.[0]?.value,
+            role: 'PENDING',
+            active: true,
+            firstLoginAt: new Date(),
+          });
           await logAttempt({
             email: normalizedEmail,
-            status: 'BLOCKED',
-            reason: 'Email not pre-registered',
+            status: 'PENDING',
+            reason: 'First-time login - awaiting role assignment',
             req,
           });
-          return done(null, false, { message: 'Email not authorized' });
+          // Notify all admins about the pending user
+          await notifyPendingUser(user);
+          return done(null, user);
         }
 
         if (user.active === false) {
@@ -95,14 +110,18 @@ passport.use(
 
         user.googleId = profile.id;
         user.avatar = profile.photos?.[0]?.value;
+        if (!user.firstLoginAt) {
+          user.firstLoginAt = new Date();
+        }
         if (hardcodedRole && user.role !== hardcodedRole) {
           user.role = hardcodedRole;
+          user.roleAssignedAt = new Date();
         }
         await user.save();
         await logAttempt({
           email: normalizedEmail,
-          status: 'ALLOWED',
-          reason: `Role ${user.role}`,
+          status: user.role === 'PENDING' ? 'PENDING' : 'ALLOWED',
+          reason: user.role === 'PENDING' ? 'Awaiting role assignment' : `Role ${user.role}`,
           req,
         });
 

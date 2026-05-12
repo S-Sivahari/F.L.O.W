@@ -160,9 +160,20 @@ router.put('/:id/role', async (req, res) => {
       return res.status(400).json({ error: 'Role is required' });
     }
 
+    const updateData = { role: req.body.role };
+    
+    // Track role assignment if changing from PENDING
+    const currentUser = await User.findById(req.params.id);
+    if (currentUser && currentUser.role === 'PENDING' && req.body.role !== 'PENDING') {
+      updateData.roleAssignedAt = new Date();
+      if (req.user && req.user._id) {
+        updateData.roleAssignedBy = req.user._id;
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { role: req.body.role },
+      updateData,
       { new: true }
     );
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -185,6 +196,18 @@ router.put('/:id/skills', async (req, res) => {
     res.json(user);
   } catch (error) {
     console.error('User skill update error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete user permanently
+router.delete('/:id', async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'User deleted successfully', user });
+  } catch (error) {
+    console.error('User delete error:', error);
     res.status(400).json({ error: error.message });
   }
 });

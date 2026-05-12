@@ -10,6 +10,10 @@ router.get(
   '/google/callback',
   passport.authenticate('google', { failureRedirect: `${process.env.CLIENT_URL}/login?error=unauthorized` }),
   (req, res) => {
+    // Redirect pending users to a waiting page
+    if (req.user && req.user.role === 'PENDING') {
+      return res.redirect(`${process.env.CLIENT_URL}/pending`);
+    }
     res.redirect(`${process.env.CLIENT_URL}/dashboard`);
   }
 );
