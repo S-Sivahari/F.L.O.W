@@ -57,11 +57,21 @@ function wouldCreateCycle(blockId, dependsOn = [], allBlocks = []) {
   return hasCycle(sourceId);
 }
 
-// Get all blocks
+// Get all blocks (filtered by role)
 router.get('/', async (req, res) => {
   try {
     console.log('📥 GET /api/blocks request received');
-    const blocks = await Block.find().populate('assignedEngineerId').populate('dependsOn');
+    console.log('👤 User:', req.user?.email, 'Role:', req.user?.role);
+    
+    let query = {};
+    
+    // Engineers can only see their assigned blocks
+    if (req.user?.role === 'ENGINEER') {
+      query.assignedEngineerId = req.user._id;
+      console.log('🔒 Engineer filter applied - only showing assigned blocks');
+    }
+    
+    const blocks = await Block.find(query).populate('assignedEngineerId').populate('dependsOn');
     console.log(`✅ Found ${blocks.length} blocks`);
     res.json(blocks);
   } catch (error) {

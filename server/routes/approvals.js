@@ -3,10 +3,17 @@ import Approval from '../models/Approval.js';
 
 const router = express.Router();
 
-// Get all approvals
+// Get all approvals (filtered by role)
 router.get('/', async (req, res) => {
   try {
-    const approvals = await Approval.find()
+    let query = {};
+    
+    // Engineers can only see their own approval requests
+    if (req.user?.role === 'ENGINEER') {
+      query.engineerId = req.user._id;
+    }
+    
+    const approvals = await Approval.find(query)
       .populate('blockId')
       .populate('requestedBy')
       .populate('approvedBy');

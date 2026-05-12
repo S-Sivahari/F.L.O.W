@@ -65,6 +65,16 @@ body {
   -webkit-font-smoothing: antialiased;
   zoom: 1.25;
 }
+
+/* Prevent scrolling when login page is active */
+body:has(.login-page) {
+  overflow: hidden;
+  height: 100vh;
+}
+html:has(.login-page) {
+  overflow: hidden;
+  height: 100vh;
+}
 h1,
 h2,
 h3,
@@ -993,51 +1003,62 @@ label {
   --text-muted: #555e74;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.6);
-  min-height: 100vh;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at top, #1a2030 0%, var(--bg-base) 60%);
+  background: 
+    linear-gradient(rgba(13, 15, 20, 0.75), rgba(13, 15, 20, 0.75)),
+    url('/image copy.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   padding: 20px;
+  box-sizing: border-box;
 }
 .login-card {
   background: linear-gradient(
     180deg,
-    rgba(20, 24, 32, 0.98),
-    rgba(13, 15, 20, 0.96)
+    rgba(255, 255, 255, 0.98),
+    rgba(248, 250, 252, 0.96)
   );
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: var(--radius-lg);
-  padding: 44px;
-  max-width: 460px;
+  padding: 32px;
+  max-width: 380px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: loginFadeIn 360ms ease-out both;
+  flex-shrink: 0;
 }
 .login-logo-block {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 .login-logo {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: 0.02em;
-  color: #fff;
+  color: #1e293b;
 }
 .login-logo svg {
   color: var(--accent-primary);
+  width: 24px;
+  height: 24px;
 }
 .login-subtitle {
   text-align: center;
-  color: #b0b0b0;
+  color: #64748b;
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .login-role-picker {

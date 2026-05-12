@@ -21,10 +21,10 @@ export default function PendingPage() {
 
   return (
     <div className="login-page">
-      <div className="login-card" style={{ maxWidth: 520 }}>
+      <div className="login-card" style={{ maxWidth: 420 }}>
         <div className="login-logo-block">
           <div className="login-logo">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
               <rect x="6" y="6" width="20" height="20" rx="2" stroke="currentColor" strokeWidth="2"/>
               <circle cx="16" cy="16" r="3" fill="currentColor"/>
               <path d="M2 12h4M2 20h4M26 12h4M26 20h4M12 2v4M20 2v4M12 26v4M20 26v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -33,27 +33,27 @@ export default function PendingPage() {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ 
-            width: 80, 
-            height: 80, 
-            margin: '0 auto 16px', 
+            width: 60, 
+            height: 60, 
+            margin: '0 auto 12px', 
             borderRadius: '50%',
             background: 'rgba(245, 158, 11, 0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 40
+            fontSize: 32
           }}>
             ⏳
           </div>
-          <h2 style={{ color: '#fff', marginBottom: 12, fontSize: 22 }}>
+          <h2 style={{ color: '#fff', marginBottom: 10, fontSize: 18 }}>
             Account Pending Approval
           </h2>
-          <p style={{ color: '#b0b0b0', fontSize: 14, lineHeight: 1.6 }}>
+          <p style={{ color: '#b0b0b0', fontSize: 13, lineHeight: 1.5 }}>
             Welcome, <strong>{user?.name}</strong>!
           </p>
-          <p style={{ color: '#b0b0b0', fontSize: 14, lineHeight: 1.6, marginTop: 8 }}>
+          <p style={{ color: '#b0b0b0', fontSize: 13, lineHeight: 1.5, marginTop: 6 }}>
             Your account has been created successfully, but you need to be assigned a role by an administrator before you can access the system.
           </p>
         </div>
@@ -62,12 +62,12 @@ export default function PendingPage() {
           background: 'rgba(245, 158, 11, 0.1)', 
           border: '1px solid rgba(245, 158, 11, 0.3)',
           borderRadius: 8,
-          padding: 16,
-          marginBottom: 20
+          padding: 14,
+          marginBottom: 16
         }}>
-          <div style={{ fontSize: 13, color: '#d6dceb', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: '#d6dceb', lineHeight: 1.5 }}>
             <strong>What happens next?</strong>
-            <ul style={{ marginTop: 8, paddingLeft: 20 }}>
+            <ul style={{ marginTop: 6, paddingLeft: 18, marginBottom: 0 }}>
               <li>An administrator will review your account</li>
               <li>You'll be assigned a role (Admin, Manager, or Engineer)</li>
               <li>Once assigned, you can log in and access the system</li>
@@ -75,7 +75,7 @@ export default function PendingPage() {
           </div>
         </div>
 
-        <div style={{ fontSize: 12, color: '#8b95a7', textAlign: 'center', marginBottom: 16 }}>
+        <div style={{ fontSize: 11, color: '#8b95a7', textAlign: 'center', marginBottom: 14 }}>
           Please check back later or contact your administrator for more information.
         </div>
 

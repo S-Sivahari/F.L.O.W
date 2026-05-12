@@ -7,10 +7,17 @@ import { notifyBlockAssigned } from '../services/notificationService.js';
 const router = express.Router();
 const MAX_BLOCKS_PER_ENGINEER = 5;
 
-// Get all assignments
+// Get all assignments (filtered by role)
 router.get('/', async (req, res) => {
   try {
-    const assignments = await Assignment.find()
+    let query = {};
+    
+    // Engineers can only see their own assignments
+    if (req.user?.role === 'ENGINEER') {
+      query.engineerId = req.user._id;
+    }
+    
+    const assignments = await Assignment.find(query)
       .populate('blockId')
       .populate('engineerId');
 

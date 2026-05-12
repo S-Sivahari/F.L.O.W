@@ -160,11 +160,25 @@ router.put('/:id/role', async (req, res) => {
       return res.status(400).json({ error: 'Role is required' });
     }
 
+    // Prevent users from changing their own role
+    if (req.user && String(req.user._id) === String(req.params.id)) {
+      return res.status(403).json({ error: 'You cannot change your own role' });
+    }
+
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Prevent changing admin role (extra protection)
+    if (targetUser.role === 'ADMIN' && req.body.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Cannot change admin role. Contact system administrator.' });
+    }
+
     const updateData = { role: req.body.role };
     
     // Track role assignment if changing from PENDING
-    const currentUser = await User.findById(req.params.id);
-    if (currentUser && currentUser.role === 'PENDING' && req.body.role !== 'PENDING') {
+    if (targetUser.role === 'PENDING' && req.body.role !== 'PENDING') {
       updateData.roleAssignedAt = new Date();
       if (req.user && req.user._id) {
         updateData.roleAssignedBy = req.user._id;
@@ -176,7 +190,6 @@ router.put('/:id/role', async (req, res) => {
       updateData,
       { new: true }
     );
-    if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   } catch (error) {
     console.error('User update error:', error);

@@ -436,7 +436,8 @@ export default function AdminDashboard() {
                     <select
                       value={u.role}
                       onChange={(e) => handleRoleChange(u, e.target.value)}
-                      disabled={u.role === ROLES.PENDING}
+                      disabled={u.role === ROLES.PENDING || u.id === user?.id || u.role === ROLES.ADMIN}
+                      title={u.id === user?.id ? "You cannot change your own role" : u.role === ROLES.ADMIN ? "Admin role cannot be changed" : ""}
                     >
                       <option value={ROLES.PENDING}>Pending</option>
                       <option value={ROLES.MANAGER}>Manager</option>

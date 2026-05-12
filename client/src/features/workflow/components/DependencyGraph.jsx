@@ -5,12 +5,12 @@ import {
 import '@xyflow/react/dist/style.css';
 
 const STAGE_META = {
-  'Not Started': { color: '#64748b', soft: 'rgba(100,116,139,0.12)', border: 'rgba(100,116,139,0.4)', text: '#94a3b8', short: 'IDLE' },
-  'In Progress': { color: '#3b82f6', soft: 'rgba(59,130,246,0.12)',  border: 'rgba(59,130,246,0.4)',  text: '#93c5fd', short: 'WIP' },
-  'DRC':         { color: '#8b5cf6', soft: 'rgba(139,92,246,0.12)',  border: 'rgba(139,92,246,0.4)',  text: '#c4b5fd', short: 'DRC' },
-  'LVS':         { color: '#06b6d4', soft: 'rgba(6,182,212,0.12)',   border: 'rgba(6,182,212,0.4)',   text: '#67e8f9', short: 'LVS' },
-  'Review':      { color: '#f59e0b', soft: 'rgba(245,158,11,0.12)',  border: 'rgba(245,158,11,0.4)',  text: '#fcd34d', short: 'REVIEW' },
-  'Completed':   { color: '#10b981', soft: 'rgba(16,185,129,0.12)',  border: 'rgba(16,185,129,0.4)',  text: '#6ee7b7', short: 'DONE' },
+  'Not Started': { color: '#64748b', soft: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.3)', text: '#475569', short: 'IDLE' },
+  'In Progress': { color: '#3b82f6', soft: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.3)',  text: '#2563eb', short: 'WIP' },
+  'DRC':         { color: '#8b5cf6', soft: 'rgba(139,92,246,0.08)',  border: 'rgba(139,92,246,0.3)',  text: '#7c3aed', short: 'DRC' },
+  'LVS':         { color: '#06b6d4', soft: 'rgba(6,182,212,0.08)',   border: 'rgba(6,182,212,0.3)',   text: '#0891b2', short: 'LVS' },
+  'Review':      { color: '#f59e0b', soft: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.3)',  text: '#d97706', short: 'REVIEW' },
+  'Completed':   { color: '#10b981', soft: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.3)',  text: '#059669', short: 'DONE' },
 };
 
 const STAGE_PROGRESS = {
@@ -57,13 +57,13 @@ function computeLayout(blocks) {
   });
 
   const positions = new Map();
-  const COL_W = 280, ROW_H = 130;
+  const COL_W = 400, ROW_H = 150; // Horizontal spacing between columns, vertical spacing between rows
+  
   cols.forEach((items, col) => {
-    const totalH = items.length * ROW_H;
     items.forEach((b, i) => {
       positions.set(b.id, {
-        x: col * COL_W + 40,
-        y: i * ROW_H - totalH / 2 + 350,
+        x: col * COL_W, // Horizontal position based on dependency layer
+        y: i * ROW_H, // Vertical position based on index in layer
       });
     });
   });
@@ -119,23 +119,23 @@ function BlockNode({ data }) {
 
   return (
     <div style={{
-      background: 'linear-gradient(180deg, rgba(30,41,59,0.95), rgba(15,23,42,0.88))',
-      border: critical ? `1.5px solid rgba(245,158,11,0.8)` : `1px solid ${meta.border}`,
+      background: 'linear-gradient(180deg, #ffffff, #f8fafc)',
+      border: critical ? `2px solid #f59e0b` : `1.5px solid ${meta.border}`,
       borderRadius: 12,
-      minWidth: 220,
-      maxWidth: 240,
-      padding: '10px 14px',
+      minWidth: 240,
+      maxWidth: 260,
+      padding: '12px 16px',
       cursor: 'pointer',
       boxShadow: critical
-        ? '0 0 0 3px rgba(245,158,11,0.15), 0 18px 40px -16px rgba(0,0,0,0.7)'
-        : `0 0 22px ${meta.color}22, 0 18px 40px -16px rgba(0,0,0,0.6)`,
+        ? '0 0 0 3px rgba(245,158,11,0.15), 0 4px 12px rgba(0,0,0,0.1)'
+        : `0 2px 8px rgba(0,0,0,0.08)`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
         <span style={{
           fontFamily: 'monospace', fontSize: 10,
           padding: '2px 6px', borderRadius: 4,
-          background: 'rgba(255,255,255,0.06)', color: '#94a3b8',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: '#f1f5f9', color: '#64748b',
+          border: '1px solid #e2e8f0',
         }}>
           {block.id.toUpperCase()}
         </span>
@@ -152,23 +152,23 @@ function BlockNode({ data }) {
         </span>
       </div>
 
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9', lineHeight: 1.3 }}>
+      <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', lineHeight: 1.3 }}>
         {block.name}
       </div>
 
-      <div style={{ marginTop: 8, height: 3, width: '100%', borderRadius: 4, background: 'rgba(30,41,59,0.8)', overflow: 'hidden' }}>
+      <div style={{ marginTop: 8, height: 3, width: '100%', borderRadius: 4, background: '#e2e8f0', overflow: 'hidden' }}>
         <div style={{
           height: '100%',
           width: `${STAGE_PROGRESS[block.status] ?? 0}%`,
           background: meta.color, borderRadius: 4,
-          boxShadow: `0 0 6px ${meta.color}`,
+          boxShadow: `0 0 4px ${meta.color}`,
         }} />
       </div>
 
       {critical && (
         <div style={{
           marginTop: 6, fontSize: 9, textTransform: 'uppercase',
-          letterSpacing: '0.08em', fontWeight: 600, color: '#fbbf24',
+          letterSpacing: '0.08em', fontWeight: 600, color: '#d97706',
           display: 'flex', alignItems: 'center', gap: 4,
         }}>
           ◇ Critical path
@@ -176,9 +176,9 @@ function BlockNode({ data }) {
       )}
 
       <Handle type="target" position={Position.Left}
-        style={{ background: '#0f172a', borderColor: 'rgba(148,163,184,0.4)', width: 8, height: 8 }} />
+        style={{ background: '#ffffff', borderColor: '#94a3b8', width: 8, height: 8 }} />
       <Handle type="source" position={Position.Right}
-        style={{ background: '#0f172a', borderColor: 'rgba(148,163,184,0.4)', width: 8, height: 8 }} />
+        style={{ background: '#ffffff', borderColor: '#94a3b8', width: 8, height: 8 }} />
     </div>
   );
 }
@@ -212,14 +212,14 @@ export default function DependencyGraph({ blocks = [], onNodeClick = () => {} })
           type: 'smoothstep',
           animated: isCritical,
           style: {
-            stroke: isCritical ? '#f59e0b' : 'rgba(148,163,184,0.35)',
-            strokeWidth: isCritical ? 2 : 1.5,
+            stroke: isCritical ? '#f59e0b' : 'rgba(100,116,139,0.4)',
+            strokeWidth: isCritical ? 2.5 : 2,
             filter: isCritical ? 'drop-shadow(0 0 4px rgba(245,158,11,0.6))' : 'none',
           },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: isCritical ? '#f59e0b' : 'rgba(148,163,184,0.55)',
-            width: 16, height: 16,
+            color: isCritical ? '#f59e0b' : 'rgba(100,116,139,0.6)',
+            width: 18, height: 18,
           },
         });
       });
@@ -241,19 +241,30 @@ export default function DependencyGraph({ blocks = [], onNodeClick = () => {} })
   }
 
   return (
-    <div style={{ width: '100%', height: '100%', background: '#0f172a', borderRadius: 16, overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: '100%', background: '#f8fafc', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
         onNodeClick={handleNodeClick}
         fitView
-        fitViewOptions={{ padding: 0.18 }}
-        minZoom={0.3}
-        maxZoom={1.8}
+        fitViewOptions={{ 
+          padding: 0.2,
+          minZoom: 0.6,
+          maxZoom: 1.0,
+        }}
+        defaultViewport={{ x: 100, y: 100, zoom: 0.8 }}
+        minZoom={0.4}
+        maxZoom={1.5}
+        defaultEdgeOptions={{
+          type: 'smoothstep',
+        }}
+        nodesDraggable={true}
+        nodesConnectable={false}
+        elementsSelectable={true}
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="rgba(148,163,184,0.12)" gap={28} size={1} />
+        <Background color="rgba(100,116,139,0.08)" gap={24} size={1} />
         <Controls showInteractive={false} />
       </ReactFlow>
     </div>

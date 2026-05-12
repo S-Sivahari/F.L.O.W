@@ -3,10 +3,20 @@ import WorkflowLog from '../models/WorkflowLog.js';
 
 const router = express.Router();
 
-// Get all workflow logs
+// Get all workflow logs (filtered by role)
 router.get('/', async (req, res) => {
   try {
-    const logs = await WorkflowLog.find()
+    let query = {};
+    
+    // Engineers can only see logs for their assigned blocks
+    if (req.user?.role === 'ENGINEER') {
+      const Block = (await import('../models/Block.js')).default;
+      const engineerBlocks = await Block.find({ assignedEngineerId: req.user._id }).select('_id');
+      const blockIds = engineerBlocks.map(b => b._id);
+      query.blockId = { $in: blockIds };
+    }
+    
+    const logs = await WorkflowLog.find(query)
       .populate('blockId')
       .populate('performedBy')
       .sort({ timestamp: -1 });
@@ -16,9 +26,18 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get logs for specific block
+// Get logs for specific block (with permission check)
 router.get('/block/:blockId', async (req, res) => {
   try {
+    // Engineers can only see logs for their assigned blocks
+    if (req.user?.role === 'ENGINEER') {
+      const Block = (await import('../models/Block.js')).default;
+      const block = await Block.findById(req.params.blockId);
+      if (!block || String(block.assignedEngineerId) !== String(req.user._id)) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+    }
+    
     const logs = await WorkflowLog.find({ blockId: req.params.blockId })
       .populate('performedBy')
       .sort({ timestamp: -1 });

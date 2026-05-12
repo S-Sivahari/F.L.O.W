@@ -18,7 +18,7 @@ export default function LoginPage() {
       <div className="login-card">
         <div className="login-logo-block">
           <div className="login-logo">
-            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
               <rect
                 x="6"
                 y="6"
