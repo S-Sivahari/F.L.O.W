@@ -6,7 +6,7 @@ const PERMISSIONS = {
   'view:effort': [ROLES.ADMIN, ROLES.MANAGER, ROLES.ENGINEER],
   'view:workflow': [ROLES.ADMIN, ROLES.MANAGER, ROLES.ENGINEER],
   'create:block': [ROLES.ADMIN, ROLES.MANAGER],
-  'delete:block': [ROLES.ADMIN],
+  'delete:block': [ROLES.ADMIN, ROLES.MANAGER],
   'edit:block': [ROLES.ADMIN, ROLES.MANAGER],
   'override:effort': [ROLES.ADMIN, ROLES.MANAGER],
   'advance:stage': [ROLES.ENGINEER],

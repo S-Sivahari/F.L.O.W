@@ -301,7 +301,7 @@ router.put('/:id/override-effort', async (req, res) => {
 });
 
 // Delete block
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
   try {
     if (!req.params.id) {
       return res.status(400).json({ error: 'Block ID is required' });
