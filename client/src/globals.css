@@ -1017,6 +1017,7 @@ label {
   background-repeat: no-repeat;
   padding: 20px;
   box-sizing: border-box;
+  padding-bottom: 180px;
 }
 .login-card {
   background: linear-gradient(
@@ -1056,7 +1057,7 @@ label {
 }
 .login-subtitle {
   text-align: center;
-  color: #64748b;
+  color: #1e293b;
   margin: 0;
   font-size: 12px;
   line-height: 1.5;

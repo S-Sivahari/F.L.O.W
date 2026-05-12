@@ -120,27 +120,20 @@ In the semiconductor industry, analog IC layout engineers manage complex multi-s
    cd F.L.O.W
    ```
 
-2. **Install server dependencies**
+2. **Install all dependencies (frontend + backend)**
    ```bash
-   cd server
    npm install
    ```
+   This will automatically install dependencies for both client and server using npm workspaces.
 
-3. **Install client dependencies**
-   ```bash
-   cd ../client
-   npm install
-   ```
-
-4. **Configure environment variables**
+3. **Configure environment variables**
    - Copy `.env.example` to `.env` in the root directory
    ```bash
-   cd ..
    copy .env.example .env
    ```
    - Fill in all required values (see Environment Variables section below)
 
-5. **Set up Google OAuth 2.0**
+4. **Set up Google OAuth 2.0**
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
    - Create a new project or select existing one
    - Enable Google+ API
@@ -148,32 +141,17 @@ In the semiconductor industry, analog IC layout engineers manage complex multi-s
    - Add authorized redirect URI: `http://localhost:5000/api/auth/google/callback`
    - Copy Client ID and Client Secret to `.env` file
 
-6. **Start the application**
-
-   **Option 1: Using the batch script (Windows)**
+5. **Start the application**
    ```bash
-   start-flow.bat
-   ```
-
-   **Option 2: Manual start**
-   
-   Terminal 1 - Start Backend:
-   ```bash
-   cd server
    npm start
    ```
-   
-   Terminal 2 - Start Frontend:
-   ```bash
-   cd client
-   npm start
-   ```
+   This will start both the backend server (port 5000) and frontend dev server (port 8080) simultaneously.
 
-7. **Access the application**
+6. **Access the application**
    - Frontend: `http://localhost:8080`
    - Backend API: `http://localhost:5000`
 
-8. **First-time setup**
+7. **First-time setup**
    - Login with Google using the admin email specified in `.env`
    - The first user with the admin email will automatically get Admin role
    - Other users will need role assignment from Admin
