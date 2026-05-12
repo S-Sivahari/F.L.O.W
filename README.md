@@ -94,19 +94,48 @@ In the semiconductor industry, analog IC layout engineers manage complex multi-s
 
 ## UI Screenshots
 
-> **Note:** Screenshots will be added here for the following pages:
 > 1. Login Page (Google OAuth)
->    <img width="1600" height="819" alt="image" src="https://github.com/user-attachments/assets/d0037885-c78e-4ad5-91bf-dadcacf3b204" />
+<img width="1600" height="819" alt="image" src="https://github.com/user-attachments/assets/d0037885-c78e-4ad5-91bf-dadcacf3b204" />
 
-> 3. Admin Dashboard
-> 4. Manager Dashboard
-> 5. Engineer Dashboard
-> 6. Block Definition Page
-> 7. Workflow Kanban Board
-> 8. Assignment Management
-> 9. Approval Screen
-> 10. Effort Tracking Page
-> 11. Dependency Graph (Add-on)
+> 2. Admin Dashboard
+ <img width="1600" height="829" alt="image" src="https://github.com/user-attachments/assets/555dfd39-66b6-468c-9d30-7b6251aa8aaf" />
+ <img width="1600" height="833" alt="image" src="https://github.com/user-attachments/assets/c49e4dcc-a3da-4b6d-84d5-9f372e93a0a8" />
+
+> 3. Manager Dashboard
+ <img width="1600" height="833" alt="image" src="https://github.com/user-attachments/assets/64b73dea-99c2-4b33-b1d1-fea9cdb899b2" />
+ <img width="1600" height="834" alt="image" src="https://github.com/user-attachments/assets/e127bcee-98db-49b5-acfc-79e475dbd754" />
+ <img width="1600" height="829" alt="image" src="https://github.com/user-attachments/assets/739333b2-1bfc-49cd-879c-ef1cc9fd831a" />
+
+> 4. Engineer Dashboard
+<img width="1600" height="828" alt="image" src="https://github.com/user-attachments/assets/06fabbed-e8b6-4836-a0ee-87bbc07d8c31" />
+<img width="1600" height="826" alt="image" src="https://github.com/user-attachments/assets/3745a04f-669d-4cd9-83c9-fc280c8e44da" />
+<img width="1600" height="835" alt="image" src="https://github.com/user-attachments/assets/5b716313-60ef-4ee8-9045-2cada4b23b7f" />
+
+> 5. Block Definition Page
+ <img width="1600" height="829" alt="image" src="https://github.com/user-attachments/assets/8ec6b331-5841-4a1a-9baa-5d83ee06cb51" />
+
+> 6. Workflow Kanban Board
+<img width="1600" height="833" alt="image" src="https://github.com/user-attachments/assets/697b49f6-aff4-4f7c-8428-0057004b39c2" />
+<img width="1600" height="826" alt="image" src="https://github.com/user-attachments/assets/c5707120-4fcf-40fa-9271-558db0c35613" />
+
+
+> 7. Assignment Management
+<img width="1600" height="832" alt="image" src="https://github.com/user-attachments/assets/e8078ec8-ddfe-4852-bc06-b05ddaecb01b" />
+
+> 8. Approval Screen
+<img width="1600" height="748" alt="image" src="https://github.com/user-attachments/assets/31ddcd3c-fb46-47b1-8917-dfd054cfdd71" />
+
+> 9. Effort Tracking Page
+<img width="1600" height="829" alt="image" src="https://github.com/user-attachments/assets/33180d47-f3b4-4529-88d7-f258b17fab5a" />
+<img width="1600" height="835" alt="image" src="https://github.com/user-attachments/assets/747403ce-7018-4b8c-b014-7dd2a04584a9" />
+
+> 10. Dependency Graph
+ <img width="1600" height="834" alt="image" src="https://github.com/user-attachments/assets/a05133ef-a712-472d-b033-f72038460592" />
+ 
+>11. Database Schema
+<img width="342" height="446" alt="image" src="https://github.com/user-attachments/assets/41083fe1-b17a-4183-bd82-5e668da91033" />
+<img width="890" height="747" alt="image" src="https://github.com/user-attachments/assets/28eb3a3f-9cb8-4694-97a1-654e407426ca" />
+
 
 ---
 
