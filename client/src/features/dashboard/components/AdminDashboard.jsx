@@ -4,8 +4,6 @@ import useToast from "../../../shared/hooks/useToast.js";
 import { ROLES } from "../../../shared/constants/roles.js";
 import { STAGES } from "../../../shared/constants/pipeline.js";
 import { getBlocks, deleteBlock } from "../../../services/blocks.service.js";
-import { getApprovals } from "../../../services/approvals.service.js";
-import { getAssignments } from "../../../services/assignments.service.js";
 import {
   getUsers,
   deleteUser,
@@ -27,8 +25,6 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState("pending");
   const [users, setUsers] = useState([]);
   const [blocks, setBlocks] = useState([]);
-  const [approvals, setApprovals] = useState([]);
-  const [assignments, setAssignments] = useState([]);
   const [attempts, setAttempts] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [roleFilter, setRoleFilter] = useState("ALL");
@@ -50,20 +46,14 @@ export default function AdminDashboard() {
     const [
       nextUsers,
       nextBlocks,
-      nextApprovals,
-      nextAssignments,
       nextAttempts,
     ] = await Promise.all([
       getUsers(),
       getBlocks(),
-      getApprovals(),
-      getAssignments(),
       getLoginAttempts(),
     ]);
     setUsers(nextUsers);
     setBlocks(nextBlocks);
-    setApprovals(nextApprovals);
-    setAssignments(nextAssignments);
     setAttempts(nextAttempts);
   }
 
@@ -181,19 +171,13 @@ export default function AdminDashboard() {
     })).sort((a, b) => b.count - a.count);
 
     const engUtil = engineers.map((eng) => {
-      const engAssignments = assignments.filter(
-        (a) => a.engineerId === eng.id,
-      ).length;
-      const estHours = blocks
-        .filter((b) => b.assignedEngineerId === eng.id)
-        .reduce((s, b) => s + Number(b.estimatedHours || 0), 0);
-      const actHours = blocks
-        .filter((b) => b.assignedEngineerId === eng.id)
-        .reduce((s, b) => s + Number(b.actualHours || 0), 0);
+      const assignedBlocks = blocks.filter((b) => b.assignedEngineerId === eng.id);
+      const estHours = assignedBlocks.reduce((s, b) => s + Number(b.estimatedHours || 0), 0);
+      const actHours = assignedBlocks.reduce((s, b) => s + Number(b.actualHours || 0), 0);
       return {
         ...eng,
-        load: engAssignments,
-        utilizationPct: Math.min(100, Math.round((engAssignments / 5) * 100)),
+        load: assignedBlocks.length,
+        utilizationPct: Math.min(100, Math.round((assignedBlocks.length / 5) * 100)),
         variancePct: estHours
           ? Math.round(((actHours - estHours) / estHours) * 100)
           : 0,
@@ -218,7 +202,7 @@ export default function AdminDashboard() {
       bottleneck: stageCounts[0]?.stage || "N/A",
       engineerUtilization: engUtil,
     };
-  }, [assignments, blocks, engineers, users.length]);
+  }, [blocks, engineers, users.length]);
 
   async function handleUpsertUser(event) {
     event.preventDefault();

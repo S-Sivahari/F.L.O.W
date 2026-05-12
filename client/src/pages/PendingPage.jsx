@@ -47,13 +47,13 @@ export default function PendingPage() {
           }}>
             ⏳
           </div>
-          <h2 style={{ color: '#fff', marginBottom: 10, fontSize: 18 }}>
+          <h2 style={{ color: '#1e293b', marginBottom: 10, fontSize: 18 }}>
             Account Pending Approval
           </h2>
-          <p style={{ color: '#b0b0b0', fontSize: 13, lineHeight: 1.5 }}>
+          <p style={{ color: '#475569', fontSize: 13, lineHeight: 1.5 }}>
             Welcome, <strong>{user?.name}</strong>!
           </p>
-          <p style={{ color: '#b0b0b0', fontSize: 13, lineHeight: 1.5, marginTop: 6 }}>
+          <p style={{ color: '#475569', fontSize: 13, lineHeight: 1.5, marginTop: 6 }}>
             Your account has been created successfully, but you need to be assigned a role by an administrator before you can access the system.
           </p>
         </div>
@@ -65,7 +65,7 @@ export default function PendingPage() {
           padding: 14,
           marginBottom: 16
         }}>
-          <div style={{ fontSize: 12, color: '#d6dceb', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: '#1e293b', lineHeight: 1.5 }}>
             <strong>What happens next?</strong>
             <ul style={{ marginTop: 6, paddingLeft: 18, marginBottom: 0 }}>
               <li>An administrator will review your account</li>
@@ -75,7 +75,7 @@ export default function PendingPage() {
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: '#8b95a7', textAlign: 'center', marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: '#64748b', textAlign: 'center', marginBottom: 14 }}>
           Please check back later or contact your administrator for more information.
         </div>
 

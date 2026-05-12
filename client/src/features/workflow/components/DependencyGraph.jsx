@@ -57,13 +57,14 @@ function computeLayout(blocks) {
   });
 
   const positions = new Map();
-  const COL_W = 400, ROW_H = 150; // Horizontal spacing between columns, vertical spacing between rows
+  const COL_W = 350; // Horizontal spacing between columns
+  const ROW_H = 120; // Vertical spacing between rows
   
   cols.forEach((items, col) => {
     items.forEach((b, i) => {
       positions.set(b.id, {
-        x: col * COL_W, // Horizontal position based on dependency layer
-        y: i * ROW_H, // Vertical position based on index in layer
+        x: col * COL_W, // Left to right based on dependency layer
+        y: i * ROW_H,   // Vertical spread within same layer
       });
     });
   });

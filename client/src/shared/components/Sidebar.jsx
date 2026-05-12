@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutGrid, Layers, Clock, Users, Trello, CheckCircle2,
+  LayoutGrid, Layers, Clock, Trello,
 } from 'lucide-react';
 import useAuth from '../hooks/useAuth.js';
 import { canAccess } from '../utils/roleGuard.js';
@@ -10,9 +10,7 @@ const NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutGrid, action: 'view:dashboard' },
   { to: '/blocks', label: 'Layout Blocks', icon: Layers, action: 'view:blocks' },
   { to: '/effort', label: 'Effort Estimation', icon: Clock, action: 'view:effort' },
-  { to: '/assignments', label: 'Assignments', icon: Users, action: 'view:assignments' },
   { to: '/workflow', label: 'Workflow Board', icon: Trello, action: 'view:workflow' },
-  { to: '/approvals', label: 'Approvals', icon: CheckCircle2, action: 'view:approvals' },
 ];
 
 export default function Sidebar({ open }) {
