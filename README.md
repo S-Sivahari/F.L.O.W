@@ -1,6 +1,6 @@
 # F.L.O.W - Flow of Layout Operations & Workflows
 
-## 🏆 Project Title & Team
+## Project Title & Team
 
 **Team Name:** AETHER  
 **Team Lead:** Sivahari S  
@@ -9,7 +9,7 @@
 
 ---
 
-## 📋 Problem Statement
+## Problem Statement
 
 In the semiconductor industry, analog IC layout engineers manage complex multi-stage verification workflows entirely through spreadsheets and email chains. This causes:
 
@@ -23,14 +23,16 @@ In the semiconductor industry, analog IC layout engineers manage complex multi-s
 
 ---
 
-## 🔄 Application Flow
+## Application Flow
 
 ### New User Journey
 1. User visits the app and clicks **Login with Google**
 2. Google OAuth authenticates and redirects back to the app
-3. If first login — user sees a **"Pending Role Assignment"** screen
-4. Admin logs in, sees the pending user, and assigns a role
-5. User refreshes/logs back in and now has full role-based access
+3. If first login:
+   - **If email matches ADMIN_EMAIL in .env** → automatically assigned Admin role and redirected to Admin Dashboard
+   - **If email doesn't match** → user sees **"Pending Role Assignment"** screen
+4. Admin logs in, sees pending users, and assigns roles (Manager or Engineer)
+5. Once role is assigned, user can log back in with full role-based access
 
 ### Admin Flow
 1. Login via Google OAuth
@@ -61,7 +63,7 @@ In the semiconductor industry, analog IC layout engineers manage complex multi-s
 
 ---
 
-## 🛠️ Tech Stack Used
+## Tech Stack Used
 
 ### Frontend
 - **React v18.3.1** - UI library
@@ -86,10 +88,11 @@ In the semiconductor industry, analog IC layout engineers manage complex multi-s
 ### Development Tools
 - **Nodemon v3.0.1** - Auto-restart server during development
 - **@vitejs/plugin-react-swc** - Fast React refresh with SWC
+- **Concurrently v8.2.2** - Run multiple commands simultaneously
 
 ---
 
-## 📸 UI Screenshots
+## UI Screenshots
 
 > **Note:** Screenshots will be added here for the following pages:
 > 1. Login Page (Google OAuth)
@@ -105,7 +108,7 @@ In the semiconductor industry, analog IC layout engineers manage complex multi-s
 
 ---
 
-## 🚀 Setup Instructions
+## Setup Instructions
 
 ### Prerequisites
 - Node.js v20 or higher
@@ -120,11 +123,11 @@ In the semiconductor industry, analog IC layout engineers manage complex multi-s
    cd F.L.O.W
    ```
 
-2. **Install all dependencies (frontend + backend)**
+2. **Install all dependencies**
    ```bash
-   npm install
+   npm run install:all
    ```
-   This will automatically install dependencies for both client and server using npm workspaces.
+   This will install dependencies for both server and client.
 
 3. **Configure environment variables**
    - Copy `.env.example` to `.env` in the root directory
@@ -152,13 +155,12 @@ In the semiconductor industry, analog IC layout engineers manage complex multi-s
    - Backend API: `http://localhost:5000`
 
 7. **First-time setup**
-   - Login with Google using the admin email specified in `.env`
-   - The first user with the admin email will automatically get Admin role
-   - Other users will need role assignment from Admin
+   - The user with email matching `ADMIN_EMAIL` in `.env` will automatically receive Admin role on first login
+   - Other users will see "Pending Role Assignment" and need role assignment from Admin
 
 ---
 
-## 🔐 Environment Variables
+## Environment Variables
 
 Create a `.env` file in the root directory with the following variables:
 
@@ -195,7 +197,7 @@ ADMIN_ROLE=ADMIN
 
 ---
 
-## ✅ Features Implemented
+## Features Implemented
 
 ### 6 Mandatory Modules
 
@@ -207,9 +209,17 @@ ADMIN_ROLE=ADMIN
 
 #### 2. Effort Estimation
 - Complexity-based hour estimation using `base_hours × complexity_factor`
-- Four complexity levels: Simple / Medium / Complex / Critical
-- Managers can manually override auto-calculated estimates
-- Total project effort aggregated and displayed on the dashboard
+- Four complexity levels: Simple (1x) / Medium (1.5x) / Complex (2.5x) / Critical (4x)
+- Smart effort prediction — system learns from past blocks of the same type, 
+  tech node, and complexity to refine future estimates automatically
+- Prediction insights displayed to manager before confirming a new block — 
+  shows how similar past blocks actually performed vs their estimates
+- Actual hours auto-tracked via stage transition timestamps — no manual 
+  input required from engineers
+- Admin can override actual hours when timestamps are inaccurate, 
+  with the override logged in the audit trail
+- Total estimated vs actual hours aggregated on the dashboard with 
+  variance highlighting when actuals exceed estimates by more than 20%
 
 #### 3. Resource Assignment
 - Managers assign engineers to blocks from a list of available users
@@ -238,129 +248,49 @@ ADMIN_ROLE=ADMIN
 
 ### 🎯 Add-ons & Additional Features
 
+#### ✅ Dependency Graph Visualization
+Interactive visual graph showing all block dependencies built with @xyflow/react. Automatically computes the critical path using longest remaining-work chain (DFS). Critical path nodes and edges highlighted in amber. Managers can add or remove dependencies directly from the graph with built-in cycle detection to prevent circular dependencies.
+
+#### ✅ Dependency Impact Alert
+When a block on the critical path is delayed, the system instantly calculates the ripple effect — showing which downstream blocks are affected and total project delay in days.
+
+#### ✅ Bottleneck Detection
+Pipeline board highlights stages where blocks are accumulating so managers see congestion points instantly and can reassign engineers accordingly.
+
+#### ✅ Smart Effort Prediction with Insights
+System analyses historical block data to predict effort for new blocks. Prediction insights panel shown to manager during block creation — displays how similar blocks (same type, tech node, complexity) performed historically and flags if the current estimate is likely to overrun.
+
+#### ✅ Engineer Assignment Suggestions
+When assigning a block, system suggests the most suitable engineer based on current workload, past experience with the same block type, and whether they are currently blocked waiting on a dependency. Manager sees a ranked suggestion list instead of a plain dropdown.
+
+#### ✅ Actual Hours Auto-tracking with Admin Override
+Stage transition timestamps automatically calculate actual time spent per stage and in total — no engineer input needed. Admin can manually override the calculated actual hours when timestamps are inaccurate, with every override logged in the audit trail.
+
+#### ✅ Audit Log Viewer
+Full chronological log of every action in the system — block creation, stage transitions, approvals, rejections, overrides — with user ID, action type, and timestamp.
+
 #### ✅ Notification System
-In-app notifications for managers when a block hits Review stage and for engineers when their block is rejected
+In-app notifications for managers when a block hits Review stage and for engineers when their block is approved or rejected with feedback.
 
 #### ✅ Effort Analytics Chart
-Visual chart comparing estimated vs actual hours across all blocks using Recharts
+Visual chart comparing estimated vs actual hours across all blocks with variance indicators and trend lines.
 
 #### ✅ Block History Timeline
-Per-block view of every stage transition with timestamps and responsible engineer (WorkflowLog)
+Per-block view of every stage transition with timestamps, time spent per stage, and responsible engineer.
 
 #### ✅ Engineer Capacity Indicator
-Visual indicator showing each engineer's current workload before assignment
+Visual workload bar showing each engineer's current block load before assignment so managers make informed decisions.
 
 #### ✅ Search & Filter
-Search blocks by name/type and filter by stage, technology node, or complexity level
-
-#### ✅ Role-based Route Protection
-All routes protected; unauthorized access redirected automatically
-
-#### ✅ Real-time Updates
-Socket.IO integration for live dashboard updates without page refresh
-
-#### ✅ Dependency Graph Visualization
-Visual representation of block dependencies with critical path highlighting using @xyflow/react
+Filter blocks by stage, engineer, technology node, or complexity across all dashboard views.
 
 ---
 
-## ⚠️ Known Issues / Limitations
+## Known Issues / Limitations
 
 1. **No email notification system** — all notifications are in-app only
 2. **Mobile responsiveness** is functional but not fully optimised
 3. **No pagination on block lists** — performance may degrade with very large datasets
-
----
-
-## 📁 Project Structure
-
-```
-F.L.O.W/
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── features/      # Feature-based modules
-│   │   │   ├── auth/      # Authentication
-│   │   │   ├── dashboard/ # Role-based dashboards
-│   │   │   ├── blocks/    # Block management
-│   │   │   ├── workflow/  # Workflow tracking
-│   │   │   ├── assignments/ # Resource assignment
-│   │   │   ├── effort/    # Effort tracking
-│   │   │   └── approvals/ # Approval system
-│   │   └── App.jsx
-│   ├── package.json
-│   └── vite.config.js
-├── server/                # Express backend
-│   ├── config/           # Configuration files
-│   ├── models/           # Mongoose schemas
-│   ├── routes/           # API routes
-│   ├── middleware/       # Custom middleware
-│   ├── services/         # Business logic
-│   ├── utils/            # Utility functions
-│   ├── server.js         # Entry point
-│   └── package.json
-├── .env.example          # Environment template
-├── start-flow.bat        # Windows startup script
-└── README.md             # This file
-```
-
----
-
-## 🎓 Learning Outcomes
-
-This project demonstrates:
-- Full-stack MERN application development
-- OAuth 2.0 authentication implementation
-- Real-time communication with Socket.IO
-- Role-based access control (RBAC)
-- Complex state management in React
-- RESTful API design
-- MongoDB schema design and relationships
-- Real-world project management workflow automation
-
----
-
-## 👥 Team Contributions
-
-**Sivahari S (Team Lead)**
-- Project architecture and system design
-- Backend API development
-- Database schema design
-- OAuth integration
-
-**Preethikha S**
-- Frontend component development
-- Dashboard and analytics features
-- UI/UX implementation
-- Real-time notification system
-
-**R Kirthana**
-- Workflow management features
-- Approval system implementation
-- Testing and bug fixes
-- Documentation
-
----
-
-## 📝 License
-
-This project was developed for the EPIC Build-A-Thon Round 1.
-
----
-
-## 🙏 Acknowledgments
-
-- Chennai Institute of Technology for support and resources
-- EPIC Build-A-Thon organizers for the opportunity
-- Semiconductor industry professionals for domain insights
-
----
-
-## 📞 Contact
-
-For any queries regarding this project, please contact:
-- **Team Lead:** Sivahari S
-- **Institution:** Chennai Institute of Technology
-- **Team:** AETHER
 
 ---
 

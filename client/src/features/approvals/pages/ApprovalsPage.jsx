@@ -39,65 +39,67 @@ export default function ApprovalsPage() {
           {mine.length === 0 ? (
             <EmptyState message="You haven't submitted any blocks for review." />
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Block</th>
-                  <th>Submitted</th>
-                  <th>Status</th>
-                  <th>Manager Feedback</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mine.map((a) => {
-                  const block = blocks.find((b) => b.id === a.blockId);
-                  return (
-                    <tr key={a.id}>
-                      <td
-                        style={{
-                          fontFamily: "var(--font-display)",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {block?.name}
-                      </td>
-                      <td>{formatDate(a.submittedAt)}</td>
-                      <td>
-                        {a.status === "Pending" && (
-                          <span
-                            style={{
-                              color: "var(--accent-warning)",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 6,
-                            }}
-                          >
-                            <span className="pulse-dot" /> Awaiting review
-                          </span>
-                        )}
-                        {a.status === "Approved" && (
-                          <span style={{ color: "var(--accent-secondary)" }}>
-                            ✓ Completed
-                          </span>
-                        )}
-                        {a.status === "Rejected" && (
-                          <span style={{ color: "var(--accent-danger)" }}>
-                            ✗ Rejected
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        {a.status === "Rejected" ? (
-                          <RejectionFeedback approval={a} blocks={blocks} />
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Block</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th>Manager Feedback</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mine.map((a) => {
+                    const block = blocks.find((b) => b.id === a.blockId);
+                    return (
+                      <tr key={a.id}>
+                        <td
+                          style={{
+                            fontFamily: "var(--font-display)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {block?.name}
+                        </td>
+                        <td>{formatDate(a.submittedAt)}</td>
+                        <td>
+                          {a.status === "Pending" && (
+                            <span
+                              style={{
+                                color: "var(--accent-warning)",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                              }}
+                            >
+                              <span className="pulse-dot" /> Awaiting review
+                            </span>
+                          )}
+                          {a.status === "Approved" && (
+                            <span style={{ color: "var(--accent-secondary)" }}>
+                              ✓ Completed
+                            </span>
+                          )}
+                          {a.status === "Rejected" && (
+                            <span style={{ color: "var(--accent-danger)" }}>
+                              ✗ Rejected
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {a.status === "Rejected" ? (
+                            <RejectionFeedback approval={a} blocks={blocks} />
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </PageWrapper>

@@ -76,63 +76,65 @@ export default function EngineerDashboard() {
 
       <div className="card" style={{ marginBottom: 24 }}>
         <h3 style={{ fontSize: 14, marginBottom: 14 }}>My Blocks</h3>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Block Name</th>
-              <th>Type</th>
-              <th>Stage</th>
-              <th>Est. Hours</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mine.map((b) => {
-              const disabled = b.status === "Completed";
-              const isReview = b.status === "Review";
-              return (
-                <tr key={b.id}>
+        <div className="data-table-wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Block Name</th>
+                <th>Type</th>
+                <th>Stage</th>
+                <th>Est. Hours</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mine.map((b) => {
+                const disabled = b.status === "Completed";
+                const isReview = b.status === "Review";
+                return (
+                  <tr key={b.id}>
+                    <td
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {b.name}
+                    </td>
+                    <td>{b.type}</td>
+                    <td>
+                      <StatusBadge stage={b.status} />
+                    </td>
+                    <td>{b.estimatedHours}h</td>
+                    <td>
+                      <button
+                        className="btn btn-primary"
+                        disabled={disabled}
+                        onClick={() => setConfirm(b)}
+                      >
+                        {isReview ? "Submit for Review" : "Advance Stage"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {mine.length === 0 && (
+                <tr>
                   <td
+                    colSpan="5"
                     style={{
-                      fontFamily: "var(--font-display)",
-                      fontWeight: 600,
+                      textAlign: "center",
+                      color: "var(--text-secondary)",
+                      padding: 20,
                     }}
                   >
-                    {b.name}
-                  </td>
-                  <td>{b.type}</td>
-                  <td>
-                    <StatusBadge stage={b.status} />
-                  </td>
-                  <td>{b.estimatedHours}h</td>
-                  <td>
-                    <button
-                      className="btn btn-primary"
-                      disabled={disabled}
-                      onClick={() => setConfirm(b)}
-                    >
-                      {isReview ? "Submit for Review" : "Advance Stage"}
-                    </button>
+                    No blocks assigned to you yet.
                   </td>
                 </tr>
-              );
-            })}
-            {mine.length === 0 && (
-              <tr>
-                <td
-                  colSpan="5"
-                  style={{
-                    textAlign: "center",
-                    color: "var(--text-secondary)",
-                    padding: 20,
-                  }}
-                >
-                  No blocks assigned to you yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {myRejections.length > 0 && (

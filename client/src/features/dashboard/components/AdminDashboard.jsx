@@ -244,6 +244,17 @@ export default function AdminDashboard() {
     }
   }
 
+  async function handleRejectPendingUser(target) {
+    if (!confirm(`Are you sure you want to reject ${target.name} (${target.email})?\n\nThis will permanently remove them from the system and they will not be able to access the application.`)) return;
+    try {
+      await deleteUser(target.id);
+      toast.success(`${target.name} has been rejected and removed from the system`);
+      await refreshAll();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  }
+
   async function handleRoleChange(target, role) {
     try {
       await updateUserRole(target.id, role);
@@ -346,43 +357,56 @@ export default function AdminDashboard() {
               <p>No pending users. All users have been assigned roles.</p>
             </div>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>First Login</th>
-                  <th>Assign Role</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingUsers.map((u) => (
-                  <tr key={u.id}>
-                    <td>{u.name}</td>
-                    <td>{u.email}</td>
-                    <td>{u.createdAt ? new Date(u.createdAt).toLocaleString() : '—'}</td>
-                    <td>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <select
-                          defaultValue=""
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              handleRoleChange(u, e.target.value);
-                            }
-                          }}
-                          style={{ minWidth: 150 }}
-                        >
-                          <option value="">Select Role</option>
-                          <option value={ROLES.ADMIN}>Admin</option>
-                          <option value={ROLES.MANAGER}>Manager</option>
-                          <option value={ROLES.ENGINEER}>Engineer</option>
-                        </select>
-                      </div>
-                    </td>
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>First Login</th>
+                    <th>Assign Role</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {pendingUsers.map((u) => (
+                    <tr key={u.id}>
+                      <td>{u.name}</td>
+                      <td>{u.email}</td>
+                      <td>{u.createdAt ? new Date(u.createdAt).toLocaleString() : '—'}</td>
+                      <td>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <select
+                            defaultValue=""
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                handleRoleChange(u, e.target.value);
+                              }
+                            }}
+                            style={{ minWidth: 150 }}
+                          >
+                            <option value="">Select Role</option>
+                            <option value={ROLES.ADMIN}>Admin</option>
+                            <option value={ROLES.MANAGER}>Manager</option>
+                            <option value={ROLES.ENGINEER}>Engineer</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => handleRejectPendingUser(u)}
+                          style={{ padding: "6px 12px", fontSize: 13 }}
+                          title="Reject and remove this user"
+                        >
+                          Reject
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -417,59 +441,61 @@ export default function AdminDashboard() {
             </span>
           </div>
 
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Skills</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.name}</td>
-                  <td>{u.email}</td>
-                  <td>
-                    <select
-                      value={u.role}
-                      onChange={(e) => handleRoleChange(u, e.target.value)}
-                      disabled={u.role === ROLES.PENDING || u.id === user?.id || u.role === ROLES.ADMIN}
-                      title={u.id === user?.id ? "You cannot change your own role" : u.role === ROLES.ADMIN ? "Admin role cannot be changed" : ""}
-                    >
-                      <option value={ROLES.PENDING}>Pending</option>
-                      <option value={ROLES.MANAGER}>Manager</option>
-                      <option value={ROLES.ENGINEER}>Engineer</option>
-                      <option value={ROLES.ADMIN}>Admin</option>
-                    </select>
-                  </td>
-                  <td style={{ minWidth: 260 }}>
-                    <input
-                      value={skillsDraft[u.id] ?? (u.skills || []).join(", ")}
-                      onChange={(e) =>
-                        setSkillsDraft((prev) => ({
-                          ...prev,
-                          [u.id]: e.target.value,
-                        }))
-                      }
-                      onBlur={() => handleSaveSkills(u)}
-                      placeholder="Add skill tags"
-                    />
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => handleDeleteUser(u)}
-                    >
-                      Delete
-                    </button>
-                  </td>
+          <div className="data-table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Skills</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredUsers.map((u) => (
+                  <tr key={u.id}>
+                    <td>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td>
+                      <select
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u, e.target.value)}
+                        disabled={u.role === ROLES.PENDING || u.id === user?.id || u.role === ROLES.ADMIN}
+                        title={u.id === user?.id ? "You cannot change your own role" : u.role === ROLES.ADMIN ? "Admin role cannot be changed" : ""}
+                      >
+                        <option value={ROLES.PENDING}>Pending</option>
+                        <option value={ROLES.MANAGER}>Manager</option>
+                        <option value={ROLES.ENGINEER}>Engineer</option>
+                        <option value={ROLES.ADMIN}>Admin</option>
+                      </select>
+                    </td>
+                    <td style={{ minWidth: 260 }}>
+                      <input
+                        value={skillsDraft[u.id] ?? (u.skills || []).join(", ")}
+                        onChange={(e) =>
+                          setSkillsDraft((prev) => ({
+                            ...prev,
+                            [u.id]: e.target.value,
+                          }))
+                        }
+                        onBlur={() => handleSaveSkills(u)}
+                        placeholder="Add skill tags"
+                      />
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => handleDeleteUser(u)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {showUserModal && (
             <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
@@ -561,60 +587,62 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Block Name</th>
-                <th>Type</th>
-                <th>Stage</th>
-                <th>Assigned Engineer</th>
-                <th>Est. Hours</th>
-                <th>Actual Hours</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {blocks.map((b) => (
-                <tr key={b.id} style={{ background: !b.assignedEngineerId ? 'rgba(245, 158, 11, 0.05)' : 'inherit' }}>
-                  <td>
-                    <strong>{b.name}</strong>
-                    {!b.assignedEngineerId && <span style={{ marginLeft: 8, color: 'var(--accent-warning)', fontSize: 11 }}>⚠️ UNASSIGNED</span>}
-                  </td>
-                  <td>{b.type}</td>
-                  <td>
-                    <span className="status-badge">
-                      <span className="dot" style={{ background: `var(--stage-${b.status.toLowerCase().replace(' ', '-')})` }}></span>
-                      {b.status}
-                    </span>
-                  </td>
-                  <td>{b.assignedEngineer?.name || <span style={{ color: 'var(--text-muted)' }}>Unassigned</span>}</td>
-                  <td>{b.estimatedHours || 0}h</td>
-                  <td>{b.actualHours || 0}h</td>
-                  <td>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => {
-                          setSelectedBlock(b);
-                          setShowBlockModal(true);
-                        }}
-                        style={{ padding: "4px 10px", fontSize: 12 }}
-                      >
-                        View
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => handleDeleteBlock(b.id)}
-                        style={{ padding: "4px 10px", fontSize: 12 }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+          <div className="data-table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Block Name</th>
+                  <th>Type</th>
+                  <th>Stage</th>
+                  <th>Assigned Engineer</th>
+                  <th>Est. Hours</th>
+                  <th>Actual Hours</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {blocks.map((b) => (
+                  <tr key={b.id} style={{ background: !b.assignedEngineerId ? 'rgba(245, 158, 11, 0.05)' : 'inherit' }}>
+                    <td>
+                      <strong>{b.name}</strong>
+                      {!b.assignedEngineerId && <span style={{ marginLeft: 8, color: 'var(--accent-warning)', fontSize: 11 }}>⚠️ UNASSIGNED</span>}
+                    </td>
+                    <td>{b.type}</td>
+                    <td>
+                      <span className="status-badge">
+                        <span className="dot" style={{ background: `var(--stage-${b.status.toLowerCase().replace(' ', '-')})` }}></span>
+                        {b.status}
+                      </span>
+                    </td>
+                    <td>{b.assignedEngineer?.name || <span style={{ color: 'var(--text-muted)' }}>Unassigned</span>}</td>
+                    <td>{b.estimatedHours || 0}h</td>
+                    <td>{b.actualHours || 0}h</td>
+                    <td>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            setSelectedBlock(b);
+                            setShowBlockModal(true);
+                          }}
+                          style={{ padding: "4px 10px", fontSize: 12 }}
+                        >
+                          View
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => handleDeleteBlock(b.id)}
+                          style={{ padding: "4px 10px", fontSize: 12 }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <BlockFormModal
             isOpen={formOpen}
@@ -790,41 +818,43 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Block/Email</th>
-                <th>Action</th>
-                <th>Actor</th>
-                <th>Details</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAuditLogs.map((log, index) => (
-                <tr key={log.id || index}>
-                  <td>
-                    <span style={{
-                      padding: "2px 8px",
-                      borderRadius: 4,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      background: log.type === 'workflow' ? 'var(--accent-primary)' : log.type === 'access_approved' ? 'var(--accent-secondary)' : 'var(--accent-warning)',
-                      color: '#fff'
-                    }}>
-                      {log.type === 'workflow' ? 'WORKFLOW' : log.type === 'access_approved' ? 'ACCESS' : 'ACCESS'}
-                    </span>
-                  </td>
-                  <td>{log.blockName || log.email || '—'}</td>
-                  <td>{log.action}</td>
-                  <td>{log.actor}</td>
-                  <td>{log.reason || log.status || '—'}</td>
+          <div className="data-table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Block/Email</th>
+                  <th>Action</th>
+                  <th>Actor</th>
+                  <th>Details</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAuditLogs.map((log, index) => (
+                  <tr key={log.id || index}>
+                    <td>
+                      <span style={{
+                        padding: "2px 8px",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        background: log.type === 'workflow' ? 'var(--accent-primary)' : log.type === 'access_approved' ? 'var(--accent-secondary)' : 'var(--accent-warning)',
+                        color: '#fff'
+                      }}>
+                        {log.type === 'workflow' ? 'WORKFLOW' : log.type === 'access_approved' ? 'ACCESS' : 'ACCESS'}
+                      </span>
+                    </td>
+                    <td>{log.blockName || log.email || '—'}</td>
+                    <td>{log.action}</td>
+                    <td>{log.actor}</td>
+                    <td>{log.reason || log.status || '—'}</td>
                   <td>{new Date(log.timestamp).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

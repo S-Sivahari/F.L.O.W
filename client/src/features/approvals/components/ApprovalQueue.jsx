@@ -29,52 +29,54 @@ export default function ApprovalQueue({ approvals, blocks, onChanged, mode }) {
   }
 
   return (
-    <table className="data-table">
-      <thead><tr>
-        <th>Block</th><th>Engineer</th><th>Type</th><th>Submitted</th><th>Status</th>
-        {mode === 'active' && <th>Actions</th>}
-      </tr></thead>
-      <tbody>
-        {approvals.map((a) => {
-          const block = blocks.find((b) => b.id === a.blockId);
-          return (
-            <React.Fragment key={a.id}>
-              <tr>
-                <td style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}>{block?.name || '—'}</td>
-                <td>{a.engineerName || 'Engineer'}</td>
-                <td>{block?.type}</td>
-                <td>{formatDate(a.submittedAt)}</td>
-                <td>
-                  {a.status === 'Pending' && <span style={{ color: 'var(--accent-warning)' }}>Pending</span>}
-                  {a.status === 'Approved' && <span style={{ color: 'var(--accent-secondary)' }}>Approved</span>}
-                  {a.status === 'Rejected' && <span style={{ color: 'var(--accent-danger)' }}>Rejected</span>}
-                </td>
-                {mode === 'active' && (
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn btn-success" onClick={() => onApprove(a)}>✓ Approve</button>
-                      <button className="btn btn-danger" onClick={() => setRejectingId(rejectingId === a.id ? null : a.id)}>✗ Reject</button>
-                    </div>
-                  </td>
-                )}
-              </tr>
-              {rejectingId === a.id && (
+    <div className="data-table-wrapper">
+      <table className="data-table">
+        <thead><tr>
+          <th>Block</th><th>Engineer</th><th>Type</th><th>Submitted</th><th>Status</th>
+          {mode === 'active' && <th>Actions</th>}
+        </tr></thead>
+        <tbody>
+          {approvals.map((a) => {
+            const block = blocks.find((b) => b.id === a.blockId);
+            return (
+              <React.Fragment key={a.id}>
                 <tr>
-                  <td colSpan={6}>
-                    <div className="rejection-panel">
-                      <textarea placeholder="Rejection reason (required)…" value={comment} onChange={(e) => setComment(e.target.value)} />
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                        <button className="btn btn-danger" onClick={() => onReject(a)}>Submit Rejection</button>
-                        <button className="btn btn-secondary" onClick={() => { setRejectingId(null); setComment(''); }}>Cancel</button>
-                      </div>
-                    </div>
+                  <td style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}>{block?.name || '—'}</td>
+                  <td>{a.engineerName || 'Engineer'}</td>
+                  <td>{block?.type}</td>
+                  <td>{formatDate(a.submittedAt)}</td>
+                  <td>
+                    {a.status === 'Pending' && <span style={{ color: 'var(--accent-warning)' }}>Pending</span>}
+                    {a.status === 'Approved' && <span style={{ color: 'var(--accent-secondary)' }}>Approved</span>}
+                    {a.status === 'Rejected' && <span style={{ color: 'var(--accent-danger)' }}>Rejected</span>}
                   </td>
+                  {mode === 'active' && (
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="btn btn-success" onClick={() => onApprove(a)}>✓ Approve</button>
+                        <button className="btn btn-danger" onClick={() => setRejectingId(rejectingId === a.id ? null : a.id)}>✗ Reject</button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </tbody>
-    </table>
+                {rejectingId === a.id && (
+                  <tr>
+                    <td colSpan={6}>
+                      <div className="rejection-panel">
+                        <textarea placeholder="Rejection reason (required)…" value={comment} onChange={(e) => setComment(e.target.value)} />
+                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                          <button className="btn btn-danger" onClick={() => onReject(a)}>Submit Rejection</button>
+                          <button className="btn btn-secondary" onClick={() => { setRejectingId(null); setComment(''); }}>Cancel</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
