@@ -7,7 +7,7 @@ const PROFILE_COLLECTION_KEY = "layout_os_user_profiles";
 const GOOGLE_IDENTITY = {
   id: "google-user-1",
   name: "Avery Chen",
-  email: "avery@layoutos.io",
+  email: "avery@flow.io",
   avatarInitials: "AC",
 };
 

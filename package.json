@@ -2,6 +2,7 @@
   "name": "flow-root",
   "private": true,
   "scripts": {
+    "start": "npm --prefix client start",
     "dev": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
     "preview": "npm --prefix client run preview",

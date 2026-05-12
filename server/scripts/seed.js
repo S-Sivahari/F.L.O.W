@@ -23,37 +23,37 @@ async function seedDatabase() {
     const users = await User.insertMany([
       {
         name: 'Avery Chen',
-        email: 'avery@layoutos.io',
+        email: 'avery@flow.io',
         role: 'ENGINEER',
       },
       {
         name: 'Jordan Smith',
-        email: 'jordan@layoutos.io',
+        email: 'jordan@flow.io',
         role: 'ENGINEER',
       },
       {
         name: 'Taylor Brown',
-        email: 'taylor@layoutos.io',
+        email: 'taylor@flow.io',
         role: 'ENGINEER',
       },
       {
         name: 'Morgan Lee',
-        email: 'morgan@layoutos.io',
+        email: 'morgan@flow.io',
         role: 'ENGINEER',
       },
       {
         name: 'Casey Wang',
-        email: 'casey@layoutos.io',
+        email: 'casey@flow.io',
         role: 'ENGINEER',
       },
       {
         name: 'Manager Alice',
-        email: 'manager@layoutos.io',
+        email: 'manager@flow.io',
         role: 'MANAGER',
       },
       {
         name: 'Admin Bob',
-        email: 'admin@layoutos.io',
+        email: 'admin@flow.io',
         role: 'ADMIN',
       },
     ]);

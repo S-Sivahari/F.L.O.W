@@ -1,5 +1,5 @@
 {
-  "name": "layoutos-server",
+  "name": "flow-server",
   "version": "1.0.0",
   "type": "module",
   "description": "Backend server for FLOW - Layout Engineering Platform",
