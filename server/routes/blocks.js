@@ -2,6 +2,7 @@ import express from 'express';
 import Block from '../models/Block.js';
 import Assignment from '../models/Assignment.js';
 import WorkflowLog from '../models/WorkflowLog.js';
+import { ensureRole } from '../middleware/auth.js';
 
 const PIPELINE_STAGES = [
   'Not Started',
@@ -70,7 +71,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create block
-router.post('/', async (req, res) => {
+router.post('/', ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
   try {
     const { name, type, complexity, baseHours, ...rest } = req.body;
     
@@ -108,7 +109,8 @@ router.post('/', async (req, res) => {
     });
 
     await block.save();
-    await block.populate('assignedEngineerId').populate('dependsOn');
+    await block.populate('assignedEngineerId');
+    await block.populate('dependsOn');
     
     res.status(201).json(block);
   } catch (error) {

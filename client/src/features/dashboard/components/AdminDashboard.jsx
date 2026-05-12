@@ -20,6 +20,7 @@ import {
 } from "../../../services/admin.service.js";
 import { getWorkflowLog } from "../../../services/workflow.service.js";
 import { subscribeToDataChanges } from "../../../services/api.js";
+import BlockFormModal from "../../blocks/components/BlockFormModal.jsx";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -42,6 +43,7 @@ export default function AdminDashboard() {
   const [selectedStage, setSelectedStage] = useState(STAGES[0]);
   const [reassignFrom, setReassignFrom] = useState("");
   const [reassignTo, setReassignTo] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
 
   async function refreshAll() {
     const [
@@ -256,6 +258,7 @@ export default function AdminDashboard() {
       >
         {[
           ["users", "User Management"],
+          ["createblock", "Create Block"],
           ["blocks", "Block Controls"],
           ["reassign", "Engineer Reassignment"],
           ["attempts", "Access Denied"],
@@ -552,6 +555,31 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {tab === "createblock" && (
+        <div className="card">
+          <h3 style={{ marginBottom: 10 }}>Create Layout Block</h3>
+          <p style={{ marginBottom: 16, color: "var(--text-secondary)", fontSize: 12 }}>
+            Add a new layout block to the workflow. You can set dependencies, complexity, and effort estimates.
+          </p>
+          <button
+            className="btn btn-primary"
+            onClick={() => setFormOpen(true)}
+            style={{ marginBottom: 16 }}
+          >
+            + New Block
+          </button>
+          <BlockFormModal
+            isOpen={formOpen}
+            initial={null}
+            onClose={() => setFormOpen(false)}
+            onSaved={async () => {
+              setFormOpen(false);
+              await refreshAll();
+            }}
+          />
         </div>
       )}
 
