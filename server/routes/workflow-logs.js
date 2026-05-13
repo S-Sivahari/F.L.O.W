@@ -61,8 +61,12 @@ router.post('/', async (req, res) => {
       timestamp: new Date(),
     });
     await log.save();
-    await log.populate('blockId').populate('performedBy');
-    res.status(201).json(log);
+    
+    // Refetch with populated fields
+    const populatedLog = await WorkflowLog.findById(log._id)
+      .populate(['blockId', 'performedBy']);
+    
+    res.status(201).json(populatedLog);
   } catch (error) {
     console.error('Workflow log error:', error);
     res.status(400).json({ error: error.message });

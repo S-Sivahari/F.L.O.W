@@ -22,6 +22,14 @@ const approvalSchema = new mongoose.Schema(
       enum: ['Pending', 'Approved', 'Rejected'],
       default: 'Pending',
     },
+    currentStage: {
+      type: String,
+      required: true,
+    },
+    requestedStage: {
+      type: String,
+      required: true,
+    },
     reason: String,
     rejectionReason: String,
     requestedAt: {

@@ -32,18 +32,33 @@ export default function ApprovalQueue({ approvals, blocks, onChanged, mode }) {
     <div className="data-table-wrapper">
       <table className="data-table">
         <thead><tr>
-          <th>Block</th><th>Engineer</th><th>Type</th><th>Submitted</th><th>Status</th>
+          <th>Block</th><th>Engineer</th><th>Stage Request</th><th>Submitted</th><th>Status</th>
           {mode === 'active' && <th>Actions</th>}
         </tr></thead>
         <tbody>
           {approvals.map((a) => {
             const block = blocks.find((b) => b.id === a.blockId);
+            const stageInfo = a.currentStage && a.requestedStage 
+              ? `${a.currentStage} → ${a.requestedStage}`
+              : block?.type || '—';
             return (
               <React.Fragment key={a.id}>
                 <tr>
                   <td style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}>{block?.name || '—'}</td>
                   <td>{a.engineerName || 'Engineer'}</td>
-                  <td>{block?.type}</td>
+                  <td>
+                    <span style={{ fontSize: 12 }}>
+                      {a.currentStage && a.requestedStage ? (
+                        <>
+                          <span style={{ color: 'var(--text-secondary)' }}>{a.currentStage}</span>
+                          {' → '}
+                          <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>{a.requestedStage}</span>
+                        </>
+                      ) : (
+                        block?.type || '—'
+                      )}
+                    </span>
+                  </td>
                   <td>{formatDate(a.submittedAt)}</td>
                   <td>
                     {a.status === 'Pending' && <span style={{ color: 'var(--accent-warning)' }}>Pending</span>}

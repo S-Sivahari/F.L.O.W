@@ -14,6 +14,8 @@ function normalizeApproval(approval) {
     submittedAt: approval.requestedAt || approval.createdAt,
     reviewedAt: approval.processedAt || null,
     comment: approval.rejectionReason || approval.reason || null,
+    currentStage: approval.currentStage,
+    requestedStage: approval.requestedStage,
   };
 }
 
@@ -39,21 +41,16 @@ export async function submitForReview(blockId, engineerId) {
   return normalizeApproval(approval);
 }
 
-/** @api POST /api/approvals/:id/approve — Approve a block */
+/** @api POST /api/approvals/:id/approve — Approve a stage advancement */
 export async function approveBlock(approvalId, managerId) {
   const approval = await apiRequest(`/api/approvals/${approvalId}/approve`, {
     method: "PUT",
     body: JSON.stringify({ approvedBy: managerId }),
   });
-  const normalized = normalizeApproval(approval);
-  await apiRequest(`/api/blocks/${normalized.blockId}`, {
-    method: "PUT",
-    body: JSON.stringify({ status: "Completed" }),
-  });
-  return normalized;
+  return normalizeApproval(approval);
 }
 
-/** @api POST /api/approvals/:id/reject — Reject a block with comment */
+/** @api POST /api/approvals/:id/reject — Reject a stage advancement with comment */
 export async function rejectBlock(approvalId, managerId, comment) {
   const approval = await apiRequest(`/api/approvals/${approvalId}/reject`, {
     method: "PUT",
@@ -62,10 +59,5 @@ export async function rejectBlock(approvalId, managerId, comment) {
       rejectionReason: comment,
     }),
   });
-  const normalized = normalizeApproval(approval);
-  await apiRequest(`/api/blocks/${normalized.blockId}`, {
-    method: "PUT",
-    body: JSON.stringify({ status: "In Progress" }),
-  });
-  return normalized;
+  return normalizeApproval(approval);
 }

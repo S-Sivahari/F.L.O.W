@@ -1,6 +1,6 @@
 import { nextStage } from "../shared/constants/pipeline.js";
 import { apiRequest, toId, withAvatarInitials } from "./api.js";
-import { getBlocks, updateBlock } from "./blocks.service.js";
+import { getBlocks } from "./blocks.service.js";
 
 function normalizeWorkflowLog(log) {
   const actor = withAvatarInitials(log.performedBy);
@@ -19,24 +19,28 @@ function normalizeWorkflowLog(log) {
   };
 }
 
-/** @api POST /api/workflow/:blockId/advance — Advance block to next stage */
-export async function advanceStage(blockId, actorId, comment = null) {
+/** @api POST /api/approvals — Request stage advancement (creates approval request) */
+export async function requestStageAdvancement(blockId, actorId, comment = null) {
   const blocks = await getBlocks();
   const block = blocks.find((b) => b.id === blockId);
   if (!block) throw new Error("Block not found");
+  
   const next = nextStage(block.status);
   if (!next) throw new Error("Already at final stage");
-  await updateBlock(blockId, { status: next });
-  await apiRequest("/api/workflow-logs", {
+
+  // Create approval request instead of directly advancing
+  const approval = await apiRequest("/api/approvals", {
     method: "POST",
     body: JSON.stringify({
       blockId,
-      action: next,
-      performedBy: actorId,
-      details: { note: comment },
+      requestedBy: actorId,
+      currentStage: block.status,
+      requestedStage: next,
+      reason: comment,
     }),
   });
-  return { blockId, newStage: next };
+
+  return { blockId, currentStage: block.status, requestedStage: next, approvalId: approval._id };
 }
 
 /** @api GET /api/workflow/:blockId/log — Get workflow history for a block */

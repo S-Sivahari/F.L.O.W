@@ -10,6 +10,8 @@ import DashboardPage from '../features/dashboard/pages/DashboardPage.jsx';
 import BlocksPage from '../features/blocks/pages/BlocksPage.jsx';
 import EffortPage from '../features/effort/pages/EffortPage.jsx';
 import WorkflowPage from '../features/workflow/pages/WorkflowPage.jsx';
+import AssignmentsPage from '../features/assignments/pages/AssignmentsPage.jsx';
+import ApprovalsPage from '../features/approvals/pages/ApprovalsPage.jsx';
 
 function NotFound() {
   return (
@@ -43,6 +45,8 @@ export default function AppRouter() {
       <Route path="/blocks" element={<Protected action="view:blocks"><BlocksPage /></Protected>} />
       <Route path="/effort" element={<Protected action="view:effort"><EffortPage /></Protected>} />
       <Route path="/workflow" element={<Protected action="view:workflow"><WorkflowPage /></Protected>} />
+      <Route path="/assignments" element={<Protected action="view:assignments"><AssignmentsPage /></Protected>} />
+      <Route path="/approvals" element={<Protected action="view:approvals"><ApprovalsPage /></Protected>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

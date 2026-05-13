@@ -71,7 +71,7 @@ router.get('/', async (req, res) => {
       console.log('🔒 Engineer filter applied - only showing assigned blocks');
     }
     
-    const blocks = await Block.find(query).populate('assignedEngineerId').populate('dependsOn');
+    const blocks = await Block.find(query).populate(['assignedEngineerId', 'dependsOn']);
     console.log(`✅ Found ${blocks.length} blocks`);
     res.json(blocks);
   } catch (error) {
@@ -119,10 +119,12 @@ router.post('/', ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
     });
 
     await block.save();
-    await block.populate('assignedEngineerId');
-    await block.populate('dependsOn');
     
-    res.status(201).json(block);
+    // Refetch with populated fields
+    const populatedBlock = await Block.findById(block._id)
+      .populate(['assignedEngineerId', 'dependsOn']);
+    
+    res.status(201).json(populatedBlock);
   } catch (error) {
     console.error('Block creation error:', error);
     res.status(400).json({ error: error.message || 'Failed to create block' });
@@ -132,7 +134,7 @@ router.post('/', ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
 // Get single block
 router.get('/:id', async (req, res) => {
   try {
-    const block = await Block.findById(req.params.id).populate('assignedEngineerId').populate('dependsOn');
+    const block = await Block.findById(req.params.id).populate(['assignedEngineerId', 'dependsOn']);
     if (!block) return res.status(404).json({ error: 'Block not found' });
     res.json(block);
   } catch (error) {
@@ -160,8 +162,7 @@ router.put('/:id/force-stage', async (req, res) => {
       { status },
       { new: true }
     )
-      .populate('assignedEngineerId')
-      .populate('dependsOn');
+      .populate(['assignedEngineerId', 'dependsOn']);
 
     await WorkflowLog.create({
       blockId: block._id,
@@ -253,8 +254,7 @@ router.put('/:id', async (req, res) => {
     }
 
     const block = await Block.findByIdAndUpdate(req.params.id, updateData, { new: true })
-      .populate('assignedEngineerId')
-      .populate('dependsOn');
+      .populate(['assignedEngineerId', 'dependsOn']);
 
     res.json(block);
   } catch (error) {
@@ -289,8 +289,7 @@ router.put('/:id/override-effort', async (req, res) => {
       },
       { new: true }
     )
-      .populate('assignedEngineerId')
-      .populate('dependsOn');
+      .populate(['assignedEngineerId', 'dependsOn']);
 
     if (!block) return res.status(404).json({ error: 'Block not found' });
     res.json(block);

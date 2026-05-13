@@ -10,7 +10,15 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['PENDING_USER', 'BLOCK_ASSIGNED', 'BLOCK_APPROVED', 'BLOCK_REJECTED'],
+      enum: [
+        'PENDING_USER',
+        'BLOCK_ASSIGNED',
+        'BLOCK_APPROVED',
+        'BLOCK_REJECTED',
+        'STAGE_ADVANCEMENT_REQUEST',
+        'STAGE_ADVANCEMENT_APPROVED',
+        'STAGE_ADVANCEMENT_REJECTED'
+      ],
       required: true,
     },
     title: {

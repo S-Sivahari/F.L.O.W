@@ -96,15 +96,17 @@ In the semiconductor industry, analog IC layout engineers manage complex multi-s
 
 > **Note:** Screenshots will be added here for the following pages:
 > 1. Login Page (Google OAuth)
-> 2. Admin Dashboard
-> 3. Manager Dashboard
-> 4. Engineer Dashboard
-> 5. Block Definition Page
-> 6. Workflow Kanban Board
-> 7. Assignment Management
-> 8. Approval Screen
-> 9. Effort Tracking Page
-> 10. Dependency Graph (Add-on)
+>    <img width="1600" height="819" alt="image" src="https://github.com/user-attachments/assets/d0037885-c78e-4ad5-91bf-dadcacf3b204" />
+
+> 3. Admin Dashboard
+> 4. Manager Dashboard
+> 5. Engineer Dashboard
+> 6. Block Definition Page
+> 7. Workflow Kanban Board
+> 8. Assignment Management
+> 9. Approval Screen
+> 10. Effort Tracking Page
+> 11. Dependency Graph (Add-on)
 
 ---
 

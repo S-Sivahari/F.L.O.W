@@ -3,6 +3,7 @@ import Assignment from '../models/Assignment.js';
 import Block from '../models/Block.js';
 import User from '../models/User.js';
 import { notifyBlockAssigned } from '../services/notificationService.js';
+import { ensureRole } from '../middleware/auth.js';
 
 const router = express.Router();
 const MAX_BLOCKS_PER_ENGINEER = 5;
@@ -18,8 +19,7 @@ router.get('/', async (req, res) => {
     }
     
     const assignments = await Assignment.find(query)
-      .populate('blockId')
-      .populate('engineerId');
+      .populate(['blockId', 'engineerId']);
 
     const validAssignments = assignments.filter((assignment) => assignment.blockId);
     const danglingIds = assignments
@@ -37,8 +37,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Bulk reassign: move all assignments from one engineer to another (admin workflow)
-router.post('/bulk-reassign', async (req, res) => {
+// Bulk reassign: move all assignments from one engineer to another (manager workflow)
+router.post('/bulk-reassign', ensureRole(['MANAGER']), async (req, res) => {
   try {
     const { fromEngineerId, toEngineerId } = req.body;
     if (!fromEngineerId || !toEngineerId) {
@@ -79,7 +79,7 @@ router.post('/bulk-reassign', async (req, res) => {
 });
 
 // Assign engineer to block
-router.post('/', async (req, res) => {
+router.post('/', ensureRole(['MANAGER']), async (req, res) => {
   try {
     console.log('📥 POST /assignments request body:', req.body);
     const { blockId, engineerId } = req.body;
@@ -105,8 +105,7 @@ router.post('/', async (req, res) => {
 
     // Fetch and populate in a single query
     const populated = await Assignment.findById(assignment._id)
-      .populate('blockId')
-      .populate('engineerId');
+      .populate(['blockId', 'engineerId']);
 
     // Update block
     await Block.findByIdAndUpdate(blockId, { assignedEngineerId: engineerId });
@@ -127,7 +126,7 @@ router.post('/', async (req, res) => {
 });
 
 // Unassign engineer from block
-router.delete('/:blockId', async (req, res) => {
+router.delete('/:blockId', ensureRole(['MANAGER']), async (req, res) => {
   try {
     await Assignment.deleteOne({ blockId: req.params.blockId });
     await Block.findByIdAndUpdate(req.params.blockId, { assignedEngineerId: null });

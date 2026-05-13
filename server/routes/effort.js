@@ -7,7 +7,7 @@ const router = express.Router();
 // Get all effort logs
 router.get('/', async (req, res) => {
   try {
-    const efforts = await Effort.find().populate('blockId').populate('engineerId');
+    const efforts = await Effort.find().populate(['blockId', 'engineerId']);
     res.json(efforts);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -40,8 +40,11 @@ router.post('/', async (req, res) => {
     // Set block's actual hours directly to the value entered
     await Block.findByIdAndUpdate(blockId, { actualHours: hoursLogged });
     
-    await effort.populate('blockId');
-    res.status(201).json(effort);
+    // Refetch with populated fields
+    const populatedEffort = await Effort.findById(effort._id)
+      .populate('blockId');
+    
+    res.status(201).json(populatedEffort);
   } catch (error) {
     console.error('Effort logging error:', error);
     res.status(400).json({ error: error.message });

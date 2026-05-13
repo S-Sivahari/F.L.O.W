@@ -5,12 +5,12 @@ import useAuth from "../../../shared/hooks/useAuth.js";
 import useToast from "../../../shared/hooks/useToast.js";
 import { getBlocks } from "../../../services/blocks.service.js";
 import { getApprovals } from "../../../services/approvals.service.js";
-import { advanceStage } from "../../../services/workflow.service.js";
-import { submitForReview } from "../../../services/approvals.service.js";
+import { requestStageAdvancement } from "../../../services/workflow.service.js";
 import StatusBadge from "../../../shared/components/StatusBadge.jsx";
 import ConfirmDialog from "../../../shared/components/ConfirmDialog.jsx";
 import { relativeTime } from "../../../shared/utils/formatters.js";
 import { subscribeToDataChanges } from "../../../services/api.js";
+import { nextStage } from "../../../shared/constants/pipeline.js";
 
 export default function EngineerDashboard() {
   const { user } = useAuth();
@@ -37,17 +37,19 @@ export default function EngineerDashboard() {
   const myRejections = approvals.filter(
     (a) => a.engineerId === user?.id && a.status === "Rejected",
   );
+  const myApprovals = approvals.filter(
+    (a) => a.engineerId === user?.id && a.status === "Approved",
+  );
 
-  async function doAdvance(b) {
-    if (b.status === "Review") {
-      await submitForReview(b.id, user.id);
-      toast.success("Submitted for review");
-    } else {
-      await advanceStage(b.id, user.id);
-      toast.success(`Advanced ${b.name}`);
+  async function doRequestAdvancement(b) {
+    try {
+      const result = await requestStageAdvancement(b.id, user.id);
+      toast.success(`Requested advancement from ${result.currentStage} to ${result.requestedStage}. Awaiting manager approval.`);
+      setConfirm(null);
+      refresh();
+    } catch (error) {
+      toast.error(error.message || "Unable to request stage advancement");
     }
-    setConfirm(null);
-    refresh();
   }
 
   return (
@@ -90,7 +92,7 @@ export default function EngineerDashboard() {
             <tbody>
               {mine.map((b) => {
                 const disabled = b.status === "Completed";
-                const isReview = b.status === "Review";
+                const next = nextStage(b.status);
                 return (
                   <tr key={b.id}>
                     <td
@@ -109,10 +111,10 @@ export default function EngineerDashboard() {
                     <td>
                       <button
                         className="btn btn-primary"
-                        disabled={disabled}
+                        disabled={disabled || !next}
                         onClick={() => setConfirm(b)}
                       >
-                        {isReview ? "Submit for Review" : "Advance Stage"}
+                        Request Advancement
                       </button>
                     </td>
                   </tr>
@@ -137,13 +139,56 @@ export default function EngineerDashboard() {
         </div>
       </div>
 
+      {myApprovals.length > 0 && (
+        <div className="card" style={{ marginBottom: 24 }}>
+          <h3 style={{ fontSize: 14, marginBottom: 14, color: 'var(--accent-secondary)' }}>✓ Approved Requests</h3>
+          {myApprovals.map((a) => {
+            const block = blocks.find((b) => b.id === a.blockId);
+            return (
+              <div key={a.id} className="approval-feedback" style={{ 
+                padding: 12, 
+                marginBottom: 8, 
+                border: '1px solid var(--accent-secondary)', 
+                borderRadius: 6,
+                background: 'rgba(var(--accent-secondary-rgb), 0.05)'
+              }}>
+                <div
+                  style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+                >
+                  {block?.name}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "var(--text-secondary)",
+                    marginBottom: 6,
+                  }}
+                >
+                  Approved by {a.reviewerName || "Manager"} ·{" "}
+                  {relativeTime(a.reviewedAt)}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--accent-secondary)' }}>
+                  Advanced from {a.currentStage} to {a.requestedStage}. Current position: <strong>{a.requestedStage}</strong>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {myRejections.length > 0 && (
         <div className="card">
-          <h3 style={{ fontSize: 14, marginBottom: 14 }}>Rejection Feedback</h3>
+          <h3 style={{ fontSize: 14, marginBottom: 14, color: 'var(--accent-danger)' }}>✗ Rejected Requests</h3>
           {myRejections.map((a) => {
             const block = blocks.find((b) => b.id === a.blockId);
             return (
-              <div key={a.id} className="rejection-feedback">
+              <div key={a.id} className="rejection-feedback" style={{
+                padding: 12,
+                marginBottom: 8,
+                border: '1px solid var(--accent-danger)',
+                borderRadius: 6,
+                background: 'rgba(var(--accent-danger-rgb), 0.05)'
+              }}>
                 <div
                   style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
                 >
@@ -159,15 +204,16 @@ export default function EngineerDashboard() {
                   Rejected by {a.reviewerName || "Manager"} ·{" "}
                   {relativeTime(a.reviewedAt)}
                 </div>
-                <div style={{ fontSize: 13 }}>{a.comment}</div>
+                <div style={{ fontSize: 13, marginBottom: 6 }}>
+                  <strong>Reason:</strong> {a.comment || 'No reason provided'}
+                </div>
                 <div
                   style={{
                     fontSize: 11,
                     color: "var(--text-muted)",
-                    marginTop: 6,
                   }}
                 >
-                  Block returned to In Progress.
+                  Request to advance from {a.currentStage} to {a.requestedStage} was rejected. Current position: <strong>{a.currentStage}</strong>
                 </div>
               </div>
             );
@@ -177,13 +223,13 @@ export default function EngineerDashboard() {
 
       <ConfirmDialog
         isOpen={!!confirm}
-        title="Advance stage?"
+        title="Request stage advancement?"
         message={
           confirm
-            ? `${confirm.status === "Review" ? "Submit" : "Advance"} ${confirm.name} from ${confirm.status}?`
+            ? `Request to advance ${confirm.name} from ${confirm.status} to ${nextStage(confirm.status)}? This will require manager approval.`
             : ""
         }
-        onConfirm={() => doAdvance(confirm)}
+        onConfirm={() => doRequestAdvancement(confirm)}
         onCancel={() => setConfirm(null)}
       />
     </div>
